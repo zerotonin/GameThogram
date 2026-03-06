@@ -18,7 +18,7 @@ setup(name='pyvisor',
       license='GPL-3.0-or-later',
       packages=find_packages(include=['pyvisor', 'pyvisor.*']),
       entry_points={
-          "console_scripts": [],
+          "console_scripts": ["pyvisor = pyvisor.GUI.run_gui:main"],
           "gui_scripts": ["pyvisor-gui = pyvisor.GUI.run_gui:main"]
       },
       install_requires=[

@@ -81,7 +81,7 @@ Please open an issue if you plan significant changes so the community can discus
 
 - **GUI does not start** – verify that PyQt dependencies are installed for your platform and that you are using Python 3.9 or newer.
 - **Video playback is blank or stutters** – ensure you have hardware-accelerated OpenGL drivers and install the optional multimedia dependencies listed in `pyproject` extras (e.g., `PyAV`, `opencv-python`).
-- **Controller input is not detected** – confirm that the operating system recognises your gamepad. On Linux you may need the `xpad` or `xboxdrv` kernel modules.
+- **Controller input is not detected** – confirm that the operating system recognises your gamepad. On Linux you may need the `xpad` or `xboxdrv` kernel modules. On macOS, Xbox controllers may require [360Controller](https://github.com/360Controller/360Controller) or Bluetooth pairing. On Windows, PlayStation controllers may need [DS4Windows](https://ds4-windows.com/). Always plug in your gamepad **before** launching pyVISOR.
 - **Configuration files** – pyVISOR stores temporary GUI state in `~/.pyvisor/`. Deleting this directory resets layouts and cached icons.
 
 If you encounter an issue that is not covered here, please file a bug report with logs (`~/.pyvisor/*.log`) and steps to reproduce.

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyvisor"
+version = "0.1.0"
+description = "Desktop toolkit for manual ethology scoring with gamepad support."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "Bart Geurten" },
+    { name = "Ilyas Kuhlemann", email = "ilyasp.ku@gmail.com" },
+]
+requires-python = ">=3.9"
+dependencies = [
+    "appdirs",
+    "pillow",
+    "pygame>=2.0",
+    "numpy",
+    "matplotlib",
+    "pims",
+    "av",
+    "pandas",
+    "scipy",
+    "dill",
+    "xlsxwriter",
+    "PyQt5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-qt"]
+
+[project.scripts]
+pyvisor = "pyvisor.GUI.run_gui:main"
+
+[project.gui-scripts]
+pyvisor-gui = "pyvisor.GUI.run_gui:main"
+
+[tool.setuptools.packages.find]
+include = ["pyvisor", "pyvisor.*"]
+
+[tool.setuptools.package-data]
+"pyvisor.GUI" = [
+    "guidefaults_animals.json",
+    "guidefaults_movscoregui.pkl",
+    "ana.npy",
+    "pictures/*",
+    "xwing.png",
+]
+"pyvisor.resources" = ["**/*"]
