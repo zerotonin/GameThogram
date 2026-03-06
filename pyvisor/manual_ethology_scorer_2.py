@@ -118,8 +118,15 @@ class ManualEthologyScorer2:
 
     def load_movie(self, filename: str, media_type: str):
         pygame.init()
-        media_type = media_type.lower()
-        if media_type not in ['movie', 'norpix', 'image']:
+        # Normalise GUI labels to internal media type keys
+        _type_map = {
+            'movie': 'movie',
+            'norpix': 'norpix',
+            'image': 'image',
+            'imagesequence': 'image',
+        }
+        media_type = _type_map.get(media_type.lower(), media_type.lower())
+        if media_type not in ('movie', 'norpix', 'image'):
             raise KeyError("media_type '{}' is not supported.".format(media_type))
         self.movie = MediaHandler(filename, media_type)
         self.ethogram = Ethogram(self.animals, self.movie.length, self._ethogram_lock)
