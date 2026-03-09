@@ -154,7 +154,7 @@ class ManualEthologyScorer2:
         mode = img.mode
         size = img.size
         data = img.tobytes()
-        return pygame.image.fromstring(data, size, mode)
+        return pygame.image.frombytes(data, size, mode)
 
     def _define_icon_positions(self):
         self._icon_rows = [0, 96, self.screen.get_height() - 96, self.screen.get_height() - 144]

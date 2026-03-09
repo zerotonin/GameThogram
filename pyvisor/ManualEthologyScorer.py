@@ -461,7 +461,7 @@ class ManualEthologyScorer:
         mode = img.mode
         size = img.size
         data = img.tobytes()
-        return pygame.image.fromstring(data, size, mode)
+        return pygame.image.frombytes(data, size, mode)
 
     def _init_icon_positions(self):
         for an in sorted(self.animals.keys()):

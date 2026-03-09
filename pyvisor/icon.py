@@ -34,7 +34,7 @@ class Icon:
         self.drawCircle()
         pos = self.getDecallPos()
         size = self.getMaxDecallSize()  
-        self.decall = self.decall.resize(size, Image.ANTIALIAS)
+        self.decall = self.decall.resize(size, Image.LANCZOS)
         self.circle.paste(self.decall, pos, self.decall)
         self.icon = self.circle
     
@@ -66,7 +66,7 @@ class Icon:
     
     def icon2pygame(self) -> pygame.image:
         raw_str = self.icon.tobytes("raw", 'RGBA')
-        return pygame.image.fromstring(raw_str, self.size , 'RGBA')
+        return pygame.image.frombytes(raw_str, self.size , 'RGBA')
 
     
 def write_tmp_icon(path_to_icon, color):
