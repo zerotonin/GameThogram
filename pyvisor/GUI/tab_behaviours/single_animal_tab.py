@@ -135,7 +135,7 @@ class SingleAnimalTab(QWidget):
 
     @staticmethod
     def get_grid_pos(i):
-        return [i / 3, i % 3]
+        return [i // 3, i % 3]
 
     def remove_widget(self, i, behaviour: Behaviour):
         item = self.behav_widgets.pop(i)

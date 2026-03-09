@@ -91,7 +91,7 @@ class CompatibleBehaviourWidget(QWidget):
 
     @staticmethod
     def _get_grid_pos(count):
-        return [count / 2, count % 2]
+        return [count // 2, count % 2]
 
     def compatibility_toggled(self, name, state):
         if self.suppress_actions:
