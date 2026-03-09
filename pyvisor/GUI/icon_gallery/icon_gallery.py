@@ -34,7 +34,7 @@ class IconGallery(QScrollArea):
         self.button_group.setExclusive(True)
         
         for i in range(n):
-            row, column = (i / cols, i % cols)
+            row, column = (i // cols, i % cols)
             tmp_icon_path = icon.write_tmp_icon(icon_paths[i], self.bg_color)
             if tmp_icon_path is None:
                 continue
