@@ -18,6 +18,12 @@ HOME = os.path.expanduser("~")
 
 
 class TabAnalysis(QWidget):
+    """Analysis tab — video loading, scorer control, and data export.
+
+    Provides the workflow for loading media, configuring autosave,
+    running the scorer, and exporting annotated data or overlay
+    frames/videos.
+    """
 
     def __init__(self, parent: QWidget,
                  gui_data_interface: GUIDataInterface):
@@ -118,6 +124,9 @@ class TabAnalysis(QWidget):
         
         # Create Button - load video (all supported formats in one filter)
         self.btn_movie = QPushButton('load video')
+        self.btn_movie.setToolTip(
+            "Open a video file.\n"
+            "Supports AVI, MP4, MOV, MKV, MPG, WMV, FLV, WebM, M4V.")
         argList = [['Video files (*.avi *.mov *.mp4 *.mpg *.mkv *.wmv *.flv *.webm *.m4v)',
                      'All files (*)'],
                    'video loaded: ',
@@ -127,6 +136,9 @@ class TabAnalysis(QWidget):
 
         # Create Button Img Sequence loading
         self.btn_image = QPushButton('load image sequence')
+        self.btn_image.setToolTip(
+            "Open a directory of numbered images.\n"
+            "Supports JPEG, PNG, GIF, TIFF, BMP.")
         argList = [['Image files (*.jpg *.jpeg *.png *.gif *.tif *.tiff *.bmp)',
                      'All files (*)'],
                    'image sequence loaded: ',
@@ -136,6 +148,7 @@ class TabAnalysis(QWidget):
 
         # Create Button Norpix loading
         self.btn_norpix = QPushButton('load Norpix SEQ')
+        self.btn_norpix.setToolTip("Open a Norpix .seq sequence file.")
         argList = [['Norpix files (*.seq)', 'All files (*)'],
                    'Norpix sequence file loaded: ',
                    'failed to load Norpix sequence file', 'Norpix', 'Single']
@@ -149,6 +162,9 @@ class TabAnalysis(QWidget):
         settings = self.gui_data_interface.autosave_settings
 
         self.autosave_checkbox = QCheckBox('Enable autosave')
+        self.autosave_checkbox.setToolTip(
+            "Periodically save annotations in the background.\n"
+            "Files are written to the autosave directory.")
         self.autosave_checkbox.setChecked(settings['enabled'])
         self.autosave_checkbox.setStyleSheet(self.labelStyle)
         self.autosave_checkbox.stateChanged.connect(self._on_autosave_enabled_changed)
@@ -225,6 +241,9 @@ class TabAnalysis(QWidget):
         self.hboxCommand.addWidget(self.com_stepLabel)
 
         self.com_run = QPushButton('run scorer')
+        self.com_run.setToolTip("Open the scorer window to annotate the loaded video.\n"
+                                "Previous annotations are restored automatically\n"
+                                "from the resume file if available.")
         self.com_run.clicked.connect(self.runScorer)
         self.hboxCommand.addWidget(self.com_run)
         self.hboxCommand.addStretch()
@@ -249,6 +268,7 @@ class TabAnalysis(QWidget):
 
         # Export data button
         self.com_export = QPushButton('export data')
+        self.com_export.setToolTip("Export ethogram data in the selected format.")
         self.com_export.clicked.connect(self.exportData)
         self.hboxExport.addWidget(self.com_export)
 
@@ -414,25 +434,41 @@ class TabAnalysis(QWidget):
                                 QMessageBox.Ok)
             
     def exportData(self, irrelevant, filename='verboseMode',):
+        """Export ethogram data in the selected format."""
         if self.manual_scorer is None:
             QMessageBox.warning(self, 'No data',
                                 "Run the scorer first.", QMessageBox.Ok)
             return
 
         mode = str(self.comboBox.currentText())
+        mode_key = self.modeDict[mode]
+
+        # Map internal mode keys to Qt filter strings and extensions
+        _filter_map = {
+            'text':   ("Text files (*.txt)", '.txt'),
+            'pickle': ("Pickle files (*.pkl)", '.pkl'),
+            'matLab': ("MATLAB files (*.mat)", '.mat'),
+            'xlsx':   ("Excel files (*.xlsx)", '.xlsx'),
+        }
+        qt_filter, ext = _filter_map.get(mode_key, ("All files (*)", ''))
 
         if filename == 'verboseMode':
-            filename = self.getFileName(title='Export Data', path=HOME,
-                                        fileFilter=self.modeDict[mode], mode='save')
+            filename = self.getFileName(
+                title='Export Data as {}'.format(mode),
+                path=HOME, fileFilter=qt_filter, mode='save')
 
         if filename:
-            self.manual_scorer.save_data(str(filename), self.modeDict[mode])
+            # Auto-append extension if missing
+            if ext and not filename.endswith(ext):
+                filename += ext
+            self.manual_scorer.save_data(str(filename), mode_key)
         else:
             QMessageBox.warning(self, 'Export Aborted!',
                                 "Data was not exported!",
                                 QMessageBox.Ok)
                 
     def exportFrame(self, irrelevant, filename='verboseMode', frameNo='verboseMode'):
+        """Export a single video frame with behaviour icon overlays."""
         if self.manual_scorer is None:
             QMessageBox.warning(self, 'No scorer',
                                 "Run the scorer first.", QMessageBox.Ok)
@@ -445,9 +481,17 @@ class TabAnalysis(QWidget):
             return
         goOn = True
         if filename == 'verboseMode':
-            filename = self.getFileName(title='Save Frame', path=HOME, fileFilter='*.jpg', mode='save')
+            filename = self.getFileName(
+                title='Save Frame as JPEG',
+                path=HOME,
+                fileFilter='JPEG images (*.jpg *.jpeg);;PNG images (*.png);;All files (*)',
+                mode='save')
         if not filename:
             goOn = False
+        else:
+            # Auto-append .jpg if no recognised extension
+            if not any(filename.lower().endswith(e) for e in ('.jpg', '.jpeg', '.png', '.bmp')):
+                filename += '.jpg'
         if frameNo == 'verboseMode' and goOn:
             frameNo, ok = QInputDialog.getInt(self, 'Choose', 'Frame Number:')
             if not ok:
@@ -507,19 +551,35 @@ class TabAnalysis(QWidget):
             QMessageBox.Ok)
         self.manual_scorer.dio.saveOverlayMovie(dirname, prefix, extension)
 
-    def getFileName(self,title,path,fileFilter,mode):
+    def getFileName(self, title, path, fileFilter, mode):
+        """Open a file dialog with a proper filter string.
+
+        Parameters
+        ----------
+        title : str
+            Dialog window title.
+        path : str
+            Starting directory.
+        fileFilter : str
+            Qt-style filter, e.g. ``"Text files (*.txt)"``.
+        mode : str
+            ``'load'`` or ``'save'``.
+
+        Returns
+        -------
+        str
+            Selected file path, or ``''`` if cancelled.
+        """
         if mode == 'load':
-            filename = QFileDialog.getOpenFileName(self,title, path, initialFilter=fileFilter)
+            filename, _ = QFileDialog.getOpenFileName(self, title, path, fileFilter)
         elif mode == 'save':
-            filename = QFileDialog.getSaveFileName(self,title, path, initialFilter=fileFilter)
+            filename, _ = QFileDialog.getSaveFileName(self, title, path, fileFilter)
         else:
-            QMessageBox.warning(self, 'Unkown mode: ' + mode,
+            QMessageBox.warning(self, 'Unknown mode: ' + mode,
                                 "Data IO stopped, in getFileName",
                                 QMessageBox.Ok)
             return ''
-            
-        filename = filename[0]
-        return filename
+        return filename or ''
 
     def runScorer(self):
         goOn = self.checkingInputs()
