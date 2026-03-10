@@ -502,12 +502,20 @@ class TabButtons(QWidget):
         self.make_device_choice()
 
     def _add_layouts_to_central_vertical_box(self):
-        self.vbox.addStretch()
         self.vbox.addLayout(self.hboxDeviceChoice)
-        self.vbox.addLayout(self.hbox_animal_columns)
+
+        # Wrap the assignment columns in a scroll area so the window stays compact
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; }")
+        scroll_content = QWidget()
+        scroll_content.setLayout(self.hbox_animal_columns)
+        scroll.setWidget(scroll_content)
+        self.vbox.addWidget(scroll, stretch=1)
+
         self.vbox.addLayout(self.hboxLoadSavePreset)
-        self.vbox.addLayout(self.hboxJoyStickInfo)
-        self.vbox.addStretch()
+        # Joystick detail info hidden — not useful for end users
+        # self.vbox.addLayout(self.hboxJoyStickInfo)
 
     def _make_major_boxes(self):
         self.vbox = QVBoxLayout()
