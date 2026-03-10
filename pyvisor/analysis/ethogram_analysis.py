@@ -25,6 +25,14 @@ class BehaviourStats:
 
 
 @dataclass
+class TransitionResult:
+    """Transition matrix with labels."""
+    matrix: np.ndarray
+    labels: List[str]
+    title: str = ""
+
+
+@dataclass
 class AnalysisResult:
     """Container for all analysis outputs."""
     labels: List[str]
@@ -33,6 +41,7 @@ class AnalysisResult:
     behaviour_stats: List[BehaviourStats]
     transition_matrix: np.ndarray  # (n_behaviours, n_behaviours)
     transition_labels: List[str]  # row/column labels for the matrix
+    per_animal_transitions: List[TransitionResult] = field(default_factory=list)
 
 
 def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> AnalysisResult:
@@ -88,8 +97,11 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
             frequency_hz=freq,
         ))
 
-    # transition matrix
+    # transition matrix (global)
     trans_mat, trans_labels = _transition_matrix(data, labels)
+
+    # per-animal transition matrices
+    per_animal = _per_animal_transitions(data, labels)
 
     return AnalysisResult(
         labels=labels,
@@ -98,6 +110,7 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
         behaviour_stats=stats,
         transition_matrix=trans_mat,
         transition_labels=trans_labels,
+        per_animal_transitions=per_animal,
     )
 
 
@@ -168,6 +181,36 @@ def _short_label(label: str) -> str:
         parts = label.split(" : ", 1)
         return parts[1].strip()
     return label.strip()
+
+
+def _extract_animal_name(label: str) -> str:
+    """'animal_0 : aggression' → 'animal_0'"""
+    if " : " in label:
+        return label.split(" : ", 1)[0].strip()
+    return "unknown"
+
+
+def _per_animal_transitions(data: np.ndarray, labels: List[str]) -> List[TransitionResult]:
+    """Compute a separate transition matrix for each animal."""
+    from collections import OrderedDict
+
+    # Group column indices by animal name
+    animal_cols: OrderedDict[str, List[int]] = OrderedDict()
+    for i, lbl in enumerate(labels):
+        animal = _extract_animal_name(lbl)
+        animal_cols.setdefault(animal, []).append(i)
+
+    results = []
+    for animal_name, col_indices in animal_cols.items():
+        sub_data = data[:, col_indices]
+        sub_labels = [labels[i] for i in col_indices]
+        mat, tlabels = _transition_matrix(sub_data, sub_labels)
+        results.append(TransitionResult(
+            matrix=mat,
+            labels=tlabels,
+            title=animal_name,
+        ))
+    return results
 
 
 # ── CSV export helpers ──────────────────────────────────────────────
