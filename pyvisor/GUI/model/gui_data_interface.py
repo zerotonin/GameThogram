@@ -7,7 +7,7 @@ from pyvisor.GUI.model.behaviour import Behaviour
 from .callback_handler import CallbackHandler
 from .movie_bindings import MovieBindings
 from .scorer_action import ScorerAction
-from ...ManualEthologyScorer import ManualEthologyScorer
+from ...manual_ethology_scorer_2 import ManualEthologyScorer2
 from ...paths import ensure_autosave_dir, settings_path
 
 
@@ -34,7 +34,7 @@ class GUIDataInterface:
         self.callbacks_update_icon = CallbackHandler()
         self.callbacks_compatibility_changed = CallbackHandler()
         self.selected_device = None  # type: Union[str, None]
-        self.manual_scorer = None  # type: Union[None, ManualEthologyScorer]
+        self.manual_scorer = None  # type: Union[None, ManualEthologyScorer2]
         self.autosave_settings = {
             "enabled": True,
             "interval_seconds": 300,

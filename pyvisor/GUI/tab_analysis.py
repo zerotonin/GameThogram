@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QComboBox, QLineEdit,
 from .model.animal import Animal
 from .model.behaviour import Behaviour
 from .model.gui_data_interface import GUIDataInterface
-from ..ManualEthologyScorer import ManualEthologyScorer
 from ..manual_ethology_scorer_2 import ManualEthologyScorer2
 from itertools import chain
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +31,7 @@ class TabAnalysis(QWidget):
         self.analysis_list = []
         self.parent = parent
         self.gui_data_interface = gui_data_interface
-        self.manual_scorer = None  # type: Union[ManualEthologyScorer, None]
+        self.manual_scorer = None  # type: Union[ManualEthologyScorer2, None]
 
         self.media_file_name = ''
         self.media_type = ''
