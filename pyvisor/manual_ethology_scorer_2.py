@@ -190,28 +190,53 @@ class ManualEthologyScorer2:
 
     def _update_icons_of_animal(self, an: int):
         animal_etho = self.ethogram.animal_ethograms[an]
-        # Combine live toggle state with recorded ethogram at current frame
         live_state = set(self.ethogram.current_states[an])
         recorded = set(animal_etho.get_active_labels_at_frame(self.movie.frameNo))
-        combined = live_state | recorded
 
-        if len(combined) == 0:
-            return
-
-        # Check for delete in the live state only
+        # Check for delete in the live state
         delete_label = 'A{}_delete'.format(an)
         if delete_label in live_state:
-            icons = [self._delete_icon]
-        else:
-            # Filter out delete from display
-            display_labels = [l for l in combined if not l.endswith('_delete')]
-            if len(display_labels) == 0:
-                return
-            icons = animal_etho.get_icons(display_labels)
+            pos = self._icon_positions[an][0] if self._icon_positions[an] else (0, 0)
+            self.screen.blit(self._delete_icon, pos)
+            return
 
+        # Collect all labels to display, tracking which are live vs recorded-only
+        all_labels = []
+        for lbl in recorded:
+            if not lbl.endswith('_delete'):
+                all_labels.append(lbl)
+        for lbl in live_state:
+            if not lbl.endswith('_delete') and lbl not in all_labels:
+                all_labels.append(lbl)
+
+        if not all_labels:
+            return
+
+        icons = animal_etho.get_icons(all_labels)
         positions = self._icon_positions[an][:len(icons)]
-        blits = list(zip(icons, positions))
-        self.screen.blits(blits)
+
+        for icon_surf, pos, label in zip(icons, positions, all_labels):
+            is_live = label in live_state
+            is_recorded = label in recorded
+
+            if is_live and is_recorded:
+                # Both: full icon + golden ring
+                self.screen.blit(icon_surf, pos)
+                self._draw_golden_ring(pos, icon_surf.get_size())
+            elif is_live:
+                # Active only: full icon + golden ring
+                self.screen.blit(icon_surf, pos)
+                self._draw_golden_ring(pos, icon_surf.get_size())
+            else:
+                # Recorded only: semi-transparent
+                tmp = icon_surf.copy()
+                tmp.set_alpha(100)
+                self.screen.blit(tmp, pos)
+
+    def _draw_golden_ring(self, pos, size):
+        """Draw a golden border rectangle around an icon."""
+        rect = pygame.Rect(pos[0], pos[1], size[0], size[1])
+        pygame.draw.rect(self.screen, (255, 215, 0), rect, 3)
 
     def _update_text(self):
         myfont = pygame.font.SysFont(pygame.font.get_default_font(), 15)
@@ -292,10 +317,16 @@ class ManualEthologyScorer2:
         with self.ethogram.lock:
             matrices = []
             for an in sorted(self.ethogram.animal_ethograms.keys()):
-                matrix = self.ethogram.animal_ethograms[an].to_numpy()
+                etho = self.ethogram.animal_ethograms[an]
+                matrix = etho.to_numpy()
+                labels = [col for col in etho._table.columns]
                 if matrix.size == 0:
                     continue
-                matrices.append(matrix)
+                # Filter out delete columns
+                keep = [i for i, lbl in enumerate(labels)
+                        if not lbl.endswith('_delete')]
+                if keep:
+                    matrices.append(matrix[:, keep])
 
         if not matrices:
             return False
@@ -311,7 +342,11 @@ class ManualEthologyScorer2:
         labels: List[str] = []
         with self.ethogram.lock:
             for an in sorted(self.ethogram.animal_ethograms.keys()):
-                labels.extend(self.ethogram.animal_ethograms[an].get_formatted_behaviour_labels())
+                all_labels = self.ethogram.animal_ethograms[an].get_formatted_behaviour_labels()
+                all_cols = list(self.ethogram.animal_ethograms[an]._table.columns)
+                for col, lbl in zip(all_cols, all_labels):
+                    if not col.endswith('_delete'):
+                        labels.append(lbl)
         return labels
 
     def save_data(self, fpos, mode='text'):
