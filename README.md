@@ -1,91 +1,127 @@
-# pyVISOR
+# GameThogram
 
-pyVISOR is a desktop toolkit for manual ethology scoring. It allows researchers to play back image sequences or movies, annotate behaviours with configurable key bindings or game controllers, and export structured ethograms for downstream analysis. The project bundles a PyQt-based GUI, reusable data models, and automation helpers aimed at behavioural neuroscience and related disciplines.
+**Gamepad-driven ethogram annotation for animal behaviour research.**
 
-## Supported platforms
+GameThogram is a desktop application for manually scoring animal behaviours in video recordings using a gamepad (Xbox, PlayStation) or keyboard. It is designed for ethologists and behavioural neuroscientists who need frame-accurate behavioural coding with real-time visual feedback.
 
-pyVISOR is built on cross-platform Python tooling and is expected to run on:
+> Formerly known as pyMovScorer / pyVISOR.
 
-- **Windows 10/11** (x86_64)
-- **macOS 12+** (Apple Silicon or Intel)
-- **Linux** distributions with glibc 2.28+ (x86_64)
+## Features
 
-The GUI requires a working OpenGL-capable display stack. Xbox-compatible gamepads are optional but supported.
+- **Video playback** with frame-by-frame stepping, variable-speed forward/reverse, and FPS control
+- **Gamepad support** — Xbox, PlayStation, and generic controllers via pygame; keyboard fallback always available
+- **Multi-animal scoring** — define independent behaviour sets per animal with colour-coded icons
+- **Behaviour compatibility** — mark which behaviours can co-occur on the same frame
+- **Visual feedback** — recorded annotations shown semi-transparent, active annotations highlighted with golden border; F1-toggleable key binding overlay
+- **Session persistence** — resume files (`.gamethogram.pkl`) saved automatically next to the video; re-running the scorer on the same video restores all previous annotations seamlessly
+- **Autosave** — periodic background snapshots (enabled by default, every 5 minutes)
+- **Built-in analysis** — behaviour percentages, bout durations (mean ± SD), and transition probability matrices (pseudo-log colour scale) per animal and globally
+- **Export** — annotation data as text, Excel, MATLAB, or pickle; analysis plots as CSV, PNG, or SVG (text as text in SVG); scored video overlay as MP4 or image sequence
+- **Portable settings** — save/load all animals, behaviours, colours, icons, and key bindings as a single JSON file
 
-## Quick start
+## Installation
 
-1. Install the published package:
-   ```bash
-   pip install pyvisor
-   ```
-2. Launch the graphical scorer:
-   ```bash
-   pyvisor-gui
-   ```
-3. Open a video or image sequence, configure animals and behaviours, then begin annotating.
+### Prerequisites
 
-### From source
+- Python 3.9 or later
+- A working display (GameThogram uses PyQt5 for the configuration GUI and pygame for the scoring window)
 
-If you are working from a source checkout, install the project in editable mode:
-
-```bash
-pip install -e .[dev]
-```
-
-Then start the GUI as described above.
-
-### Autosave ethograms
-
-The scorer can periodically persist in-progress ethograms so that annotations
-survive crashes or accidental exits. Open the **Analysis** tab and enable the
-*Autosave* row to configure:
-
-- **Enable autosave** – turns periodic snapshots on or off.
-- **Interval** – how often snapshots are written (in minutes). The GUI stores
-  the value per user and applies it the next time the scorer starts.
-- **Target directory** – where autosave artifacts are stored (defaults to
-  `~/.pyvisor/autosaves`). Each cycle updates `autosave_latest.pkl` and
-  `autosave_latest.txt` and archives timestamped `.pkl` snapshots so you can
-  roll back to earlier states.
-
-Autosave runs continuously while the scorer is open. You can tweak the
-settings even during an active scoring session; the background writer applies
-changes immediately.
-
-### Create a local conda environment
-
-Use the provided `environment.yml` to create an isolated workspace with all
-runtime dependencies pinned to known-good versions:
+### Install from source
 
 ```bash
-conda env create -f environment.yml
-conda activate pyvisor
+git clone https://github.com/zerotonin/gamethogram.git
+cd gamethogram
 pip install -e .
 ```
 
-The final `pip install -e .` step installs the project in editable mode so that
-changes to the source tree are picked up immediately.
+> **Tip:** Use a virtual environment:
+> ```bash
+> python -m venv .venv
+> source .venv/bin/activate   # Linux/macOS
+> .venv\Scripts\activate      # Windows
+> pip install -e .
+> ```
+
+### Conda environment
+
+```bash
+conda env create -f environment.yml
+conda activate gamethogram
+pip install -e .
+```
+
+## Quick start
+
+```bash
+gamethogram       # launch from anywhere after install
+```
+
+### Workflow
+
+1. **Behaviours tab** — define animals and their behaviours; pick icons, colours, and compatibility
+2. **Button Assignment tab** — select your input device from the dropdown; assign gamepad buttons to behaviours and movie controls (or use "Set default movie bindings")
+3. **Analysis tab** — load a video file, then click **Run Scorer**
+4. **Score** — the scorer window opens with your video; press gamepad buttons to toggle behaviours; F1 shows/hides the key binding overlay; close the window when done
+5. **Export** — choose a format and click **Export Data**; or switch to the **Results Overview** tab for plots and CSV/PNG/SVG export
+
+### Gamepad setup
+
+- **Linux:** Most USB gamepads work out of the box. If not, install `xboxdrv` or `xpad`. Plug in before launching.
+- **macOS:** Xbox controllers may require [360Controller](https://github.com/360Controller/360Controller) or Bluetooth pairing.
+- **Windows:** Xbox controllers work natively. PlayStation controllers may need [DS4Windows](https://ds4-windows.com/).
+
+## Supported video formats
+
+GameThogram uses [pims](https://github.com/soft-matter/pims) + [PyAV](https://github.com/PyAV-Org/PyAV) for video I/O: AVI, MP4, MOV, MKV, MPG, WMV, FLV, WebM, M4V, and Norpix SEQ files. Image sequences (JPEG, PNG, TIFF) are also supported.
+
+
+## Project structure
+
+```
+gamethogram/
+├── pyvisor/                    # Main package (internal name kept for compatibility)
+│   ├── GUI/                    # PyQt5 interface
+│   │   ├── model/              # Data model (Animal, Behaviour, KeyBindings, …)
+│   │   ├── tab_behaviours/     # Behaviour definition tab
+│   │   ├── tab_buttons/        # Button assignment tab
+│   │   ├── icon_gallery/       # Icon selection dialogs
+│   │   ├── tab_analysis.py     # Video loading, scorer control, export
+│   │   ├── tab_results.py      # Analysis plots (matplotlib embedded in Qt)
+│   │   ├── main_gui.py         # Main window
+│   │   └── run_gui.py          # Entry point
+│   ├── analysis/               # Offline and online analysis modules
+│   ├── resources/              # Bundled icons
+│   ├── manual_ethology_scorer_2.py  # Scorer engine (pygame)
+│   ├── MediaHandler.py         # Video playback via pims
+│   ├── ethogram.py             # Ethogram data structure
+│   ├── animal_ethogram_2.py    # Per-animal frame-level data (pandas)
+│   ├── dataIO.py               # Save/load/export
+│   └── user_input_control.py   # Input dispatch
+├── docs/                       # Sphinx documentation source
+├── tests/                      # Unit and integration tests
+├── pyproject.toml              # Modern Python packaging
+├── setup.py                    # Legacy packaging (kept for editable installs)
+└── environment.yml             # Conda environment specification
+```
 
 ## Contributing
 
-We welcome contributions of bug reports, feature ideas, and pull requests.
-
-1. Fork the repository and create a feature branch.
-2. Install development dependencies with `pip install -e .[dev]`.
-3. Run the unit tests with `pytest` before opening a pull request.
-4. Follow the existing code style and include documentation or tests where relevant.
-
-Please open an issue if you plan significant changes so the community can discuss the design upfront.
+1. Fork and create a feature branch
+2. Install dev dependencies: `pip install -e .[dev]`
+3. Run tests: `pytest`
+4. Open a pull request
 
 ## Troubleshooting
 
-- **GUI does not start** – verify that PyQt dependencies are installed for your platform and that you are using Python 3.9 or newer.
-- **Video playback is blank or stutters** – ensure you have hardware-accelerated OpenGL drivers and install the optional multimedia dependencies listed in `pyproject` extras (e.g., `PyAV`, `opencv-python`).
-- **Controller input is not detected** – confirm that the operating system recognises your gamepad. On Linux you may need the `xpad` or `xboxdrv` kernel modules. On macOS, Xbox controllers may require [360Controller](https://github.com/360Controller/360Controller) or Bluetooth pairing. On Windows, PlayStation controllers may need [DS4Windows](https://ds4-windows.com/). Always plug in your gamepad **before** launching pyVISOR.
-- **Configuration files** – pyVISOR stores temporary GUI state in `~/.pyvisor/`. Deleting this directory resets layouts and cached icons.
+- **GUI does not start** — verify PyQt5 is installed and you are using Python 3.9+
+- **Controller not detected** — confirm the OS recognises the gamepad (`jstest-gtk` on Linux); plug in before launching
+- **Video won't load** — ensure PyAV is installed: `pip install av`
+- **Reset settings** — delete `~/.local/share/pyVISOR/` (Linux) or equivalent on your platform
 
-If you encounter an issue that is not covered here, please file a bug report with logs (`~/.pyvisor/*.log`) and steps to reproduce.
+## Authors
+
+Bart Geurten, Ilyas Kuhlemann
 
 ## License
 
-This project is distributed under the terms specified in the `LICENSE` file.
+GPL-3.0-or-later
