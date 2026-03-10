@@ -123,8 +123,12 @@ class MovScoreGUI(QWidget):
             self.tabs.addTab(tab, name)
 
     def _load_size_and_position_of_last_usage(self):
-        self.setGeometry(self.values['display']['geometry'])
-        self.move(self.values['display']['geometry'].topLeft())
+        try:
+            self.setGeometry(self.values['display']['geometry'])
+            self.move(self.values['display']['geometry'].topLeft())
+        except (KeyError, TypeError):
+            self.resize(960, 680)
+        self.setMinimumSize(800, 500)
 
     def get_animal_tabs(self):        
         return self.tab_behaviours.tabs.tabs_
