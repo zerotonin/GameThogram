@@ -5,6 +5,11 @@ from .scorer_action import ScorerAction
 
 
 class MovieBindings:
+    """Collection of movie-control actions with their key bindings.
+
+    Manages bindings for play/pause, stop, forward, reverse,
+    FPS adjustment, and frame stepping.
+    """
     _movie_actions = ["toggleRunMov", "stopToggle",
                       "runMovForward", "runMovReverse",
                       "changeFPShigh", "changeFPSlow",

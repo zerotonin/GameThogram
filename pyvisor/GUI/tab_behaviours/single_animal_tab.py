@@ -11,6 +11,12 @@ from ..model.behaviour import Behaviour
 
 
 class SingleAnimalTab(QWidget):
+    """Sub-tab for a single animal's behaviour definitions.
+
+    Shows a grid of :class:`BehaviourWidget` instances with
+    controls to add, remove, copy, rename, and bulk-colour
+    behaviours.
+    """
 
     def __init__(self, parent,
                  animal: Animal,
@@ -50,16 +56,19 @@ class SingleAnimalTab(QWidget):
 
         # ---- button copy animal
         btn_copy_animal = QPushButton('copy animal')
+        btn_copy_animal.setToolTip("Create a new animal with the same behaviours.")
         btn_copy_animal.clicked.connect(self.copy_this_tab)
         self.vbox_buttons_left.addWidget(btn_copy_animal)
 
         # ---- button set animal colour
         btn_set_color = QPushButton('set animal colour')
+        btn_set_color.setToolTip("Set one colour for all behaviours of this animal.")
         btn_set_color.clicked.connect(self._set_animal_colour)
         self.vbox_buttons_left.addWidget(btn_set_color)
 
         # ---- btn remove
         btn_remove_animal = QPushButton('remove this animal')
+        btn_remove_animal.setToolTip("Permanently remove this animal and all its behaviours.")
         btn_remove_animal.clicked.connect(self.remove_this_tab)    
         btn_remove_animal.setObjectName("removeAnimal")
         self.vbox_buttons_left.addWidget(btn_remove_animal)

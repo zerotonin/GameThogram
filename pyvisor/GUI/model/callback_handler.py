@@ -1,4 +1,13 @@
+"""Simple observer-pattern callback registry."""
+
+
 class CallbackHandler:
+    """Manages a set of registered callback functions.
+
+    Widgets register callables via :meth:`register` and receive a
+    numeric ID for later removal.  Iterating over the handler
+    invokes all registered callbacks.
+    """
 
     def __init__(self):
         self.n_registered = -1

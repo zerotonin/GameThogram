@@ -10,6 +10,12 @@ BehaviourName = str
 
 
 class Behaviour(ScorerAction):
+    """A scoreable behaviour linked to an animal.
+
+    Extends :class:`ScorerAction` with animal association, display
+    colour, icon path, and a compatibility list controlling which
+    other behaviours can be active simultaneously.
+    """
 
     ANIMAL_MOVIE = -1
 

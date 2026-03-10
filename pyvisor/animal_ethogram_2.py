@@ -8,6 +8,12 @@ from .GUI.model.behaviour import BehaviourName
 
 
 class AnimalEthogram2:
+    """Frame-level ethogram for a single animal.
+
+    Stores a boolean DataFrame where each column is a behaviour
+    and each row is a video frame. Provides methods to assign,
+    delete, and query behaviour states at individual frames.
+    """
 
     def __init__(self, animal: Animal, n_frames: int):
         self._animal = animal

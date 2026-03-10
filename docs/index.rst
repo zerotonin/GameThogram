@@ -1,16 +1,14 @@
-.. pyVISOR documentation master file, created by
-   sphinx-quickstart on Thu Sep 10 08:51:09 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to pyVISOR's documentation!
-===================================
+pyVISOR Documentation
+=====================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   api/modules
 
+.. automodule:: pyvisor
+   :members:
 
 Indices and tables
 ==================

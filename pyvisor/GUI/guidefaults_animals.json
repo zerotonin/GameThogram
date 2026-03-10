@@ -35,7 +35,7 @@
     "compatible_with": []
   }]}],
   "autosave": {
-    "enabled": false,
+    "enabled": true,
     "interval_seconds": 300,
     "directory": ""
   }

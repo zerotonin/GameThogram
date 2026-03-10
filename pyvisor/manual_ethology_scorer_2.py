@@ -19,6 +19,19 @@ this_files_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 class ManualEthologyScorer2:
+    """Real-time video annotation engine.
+
+    Opens a pygame window showing the video with behaviour icon
+    overlays. Processes gamepad/keyboard input to toggle behaviour
+    states and records them frame-by-frame into an :class:`Ethogram`.
+
+    Supports:
+
+    - Sidecar-based session persistence (auto-save/resume)
+    - Autosave to a configurable directory
+    - F1-toggleable key binding overlay
+    - Visual distinction between live and recorded annotations
+    """
 
     def __init__(self, animals: Dict[AnimalNumber, Animal],
                  movie_bindings: MovieBindings, selected_device: str,

@@ -7,6 +7,12 @@ from pyvisor.animal_ethogram_2 import AnimalEthogram2
 
 
 class Ethogram:
+    """Container linking all per-animal ethograms with shared state.
+
+    Manages the live toggle states (which behaviours the user is
+    currently pressing) and delegates frame-level recording to
+    :class:`AnimalEthogram2` instances.
+    """
 
     def __init__(self, animals: Dict[AnimalNumber, Animal], n_frames: int, lock: RLock = None):
         self._animals = animals

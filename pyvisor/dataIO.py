@@ -13,6 +13,12 @@ from datetime import datetime
 import pickle, xlsxwriter, pygame,os
 
 class dataIO:
+    """Data input/output handler for ethogram data.
+
+    Supports saving annotations as plain text, Excel, MATLAB, and
+    pickle formats. Also handles autosave with periodic background
+    snapshots and overlay frame/video export.
+    """
     def __init__(self,parent):
         self.autoSavePath = ''
         self.saveFpos     = ''

@@ -2,6 +2,11 @@ from typing import Union, Dict
 
 
 class KeyBindings:
+    """Per-device button/key binding storage.
+
+    Stores one binding string per supported device category:
+    X-Box, Playstation, Keyboard, or Free.
+    """
 
     def __init__(self):
         self.xbox = None  # type: Union[str, None]

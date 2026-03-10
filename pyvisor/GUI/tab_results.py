@@ -49,6 +49,13 @@ def _pick_colours(n: int):
 
 
 class TabResults(QWidget):
+    """Results tab — analysis plots with export.
+
+    Displays behaviour percentages, bout durations, and transition
+    matrices computed from the current scoring session or a
+    previously saved sidecar file. Each plot can be exported as
+    CSV, PNG, or SVG.
+    """
     """Fourth tab of the pyVISOR main GUI — analysis & export."""
 
     def __init__(self, parent: QWidget, gui_data_interface: GUIDataInterface):
@@ -72,6 +79,8 @@ class TabResults(QWidget):
         self.btn_refresh = QPushButton("Refresh analysis from scorer")
         self.btn_refresh.setStyleSheet(
             "color: #fff; background: #336699; font-weight: bold; padding: 6px 16px;")
+        self.btn_refresh.setToolTip("Compute analysis from the current scoring session\n"
+                                 "or from the saved resume file.")
         self.btn_refresh.clicked.connect(self._on_refresh)
         btn_row.addWidget(self.btn_refresh)
         btn_row.addStretch()

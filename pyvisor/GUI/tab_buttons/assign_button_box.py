@@ -8,6 +8,12 @@ from ..model.scorer_action import ScorerAction
 
 
 class AssignButtonBox(QWidget):
+    """Widget for a single button-to-action assignment.
+
+    Shows the action name, current binding, and an "assign button"
+    control. For gamepads, opens a dialog that polls for input;
+    for keyboards, opens a text entry dialog.
+    """
 
     def __init__(self,
                  parent_widget: QWidget,

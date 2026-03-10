@@ -7,6 +7,12 @@ from .ethogram import Ethogram
 
 
 class UserInputControl2:
+    """Maps gamepad/keyboard input codes to scorer actions.
+
+    Reads the button-to-behaviour assignments from the GUI model
+    and builds a dispatch dictionary. Called from the scorer's
+    main loop on every pygame input event.
+    """
 
     def __init__(self, animals: Dict[AnimalNumber, Animal],
                  movie_bindings: MovieBindings,

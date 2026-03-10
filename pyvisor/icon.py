@@ -16,6 +16,11 @@ from .resources import icons_root
 
 
 class Icon:
+    """Recolourable icon for behaviour display in the scorer window.
+
+    Loads a decal image, tints it to the behaviour's assigned colour,
+    and converts it to a pygame surface for blitting.
+    """
     
     def __init__(self, size=(96, 96), color=(144, 21, 222), alpha=255):
         self.size   = size

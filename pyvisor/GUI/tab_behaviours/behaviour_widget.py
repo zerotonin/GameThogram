@@ -16,6 +16,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 class BehaviourWidget(QFrame):
+    """Widget for editing a single behaviour's properties.
+
+    Displays and allows editing of the behaviour name, colour,
+    icon, and compatibility checkboxes.
+    """
 
     def __init__(self, parent, behaviour: Behaviour,
                  index_in_parent_list,

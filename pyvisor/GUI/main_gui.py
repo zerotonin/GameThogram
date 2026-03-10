@@ -27,6 +27,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 class MovScoreGUI(QWidget):
+    """Main application window for pyVISOR.
+
+    Contains four tabs: Behaviours, Button Assignment, Analysis,
+    and Results Overview. Manages application-level state
+    persistence and settings import/export.
+    """
 
     def __init__(self):
         """
@@ -97,11 +103,15 @@ class MovScoreGUI(QWidget):
         toolbar = QHBoxLayout()
         btn_save = QPushButton("Save settings…")
         btn_save.setStyleSheet("font-weight: bold; padding: 4px 12px;")
+        btn_save.setToolTip("Export all animal, behaviour, and key binding\n"
+                         "settings to a portable JSON file.")
         btn_save.clicked.connect(self._export_settings_json)
         toolbar.addWidget(btn_save)
 
         btn_load = QPushButton("Load settings…")
         btn_load.setStyleSheet("font-weight: bold; padding: 4px 12px;")
+        btn_load.setToolTip("Import a previously saved JSON settings file.\n"
+                         "Restart required after loading.")
         btn_load.clicked.connect(self._import_settings_json)
         toolbar.addWidget(btn_load)
         toolbar.addStretch()

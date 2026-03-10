@@ -12,6 +12,13 @@ from ...paths import ensure_autosave_dir, settings_path
 
 
 class GUIDataInterface:
+    """Central data model shared across all GUI tabs.
+
+    Holds the animal/behaviour definitions, device selection,
+    movie bindings, autosave settings, and the active scorer
+    instance. Provides callback hooks so UI widgets can react
+    to model changes.
+    """
 
     def __init__(self):
         self.movie_bindings = MovieBindings()

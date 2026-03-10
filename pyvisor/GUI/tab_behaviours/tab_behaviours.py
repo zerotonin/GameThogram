@@ -10,6 +10,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 class TabBehaviours(QWidget):
+    """Behaviours tab — define animals and their behaviours.
+
+    Provides a sub-tab per animal where behaviours can be added,
+    removed, renamed, coloured, and assigned icons.
+    """
 
     def __init__(self, parent: QWidget, gui_data_interface: GUIDataInterface):
         super(TabBehaviours, self).__init__(parent)

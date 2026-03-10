@@ -23,6 +23,12 @@ DEVICES = {"Keyboard": HERE + "/../pictures/gamePad_KB.png",
 
 # noinspection PyAttributeOutsideInit
 class TabButtons(QWidget):
+    """Button Assignment tab — bind gamepad/keyboard inputs to actions.
+
+    Detects connected input devices via pygame, lets the user
+    assign physical buttons to behaviours and movie controls,
+    and provides default binding presets per device type.
+    """
 
     def __init__(self, parent: QWidget, gui_data_interface: GUIDataInterface):
         super(TabButtons, self).__init__(parent)
@@ -185,14 +191,19 @@ class TabButtons(QWidget):
         self.hboxDeviceChoice.addWidget(self.combo_input_assign)
 
         button_reset = QPushButton("Reset bindings")
+        button_reset.setToolTip("Clear all button assignments for the current device.")
         button_reset.clicked.connect(self._reset_buttons)
         self.hboxDeviceChoice.addWidget(button_reset)
 
         button_default_bindings = QPushButton("Set default movie bindings")
+        button_default_bindings.setToolTip("Assign standard movie control bindings\n"
+                                            "for the selected device type.")
         button_default_bindings.clicked.connect(self._set_default_movie_bindings)
         self.hboxDeviceChoice.addWidget(button_default_bindings)
 
         button_device_info = QPushButton("Device info…")
+        button_device_info.setToolTip("Show detected devices, axes, buttons,\n"
+                                       "and current binding summary.")
         button_device_info.clicked.connect(self._show_device_info)
         self.hboxDeviceChoice.addWidget(button_device_info)
 

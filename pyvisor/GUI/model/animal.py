@@ -7,6 +7,11 @@ AnimalNumber = int
 
 
 class Animal:
+    """Represents a single animal being observed.
+
+    Each animal has a numeric ID, a display name, and a dictionary
+    of :class:`Behaviour` objects keyed by their label strings.
+    """
 
     def __init__(self, number: int, name: str):
         self.number = number

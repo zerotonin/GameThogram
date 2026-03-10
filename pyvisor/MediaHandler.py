@@ -13,6 +13,21 @@ from PIL import Image
 
 
 class MediaHandler:
+    """Video and image sequence playback handler.
+
+    Wraps ``pims`` to provide frame-accurate access to movies,
+    Norpix SEQ files, and image sequences. Manages playback state
+    (play/pause, forward/reverse, FPS) and an in-memory frame buffer.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the media file or image glob pattern.
+    mode : str
+        One of ``"movie"``, ``"norpix"``, or ``"image"``.
+    bufferSize : int
+        Maximum number of frames kept in the read-ahead buffer.
+    """
 
     def __init__(self, filename, mode, bufferSize=2000):
         self.activeFrame = []
