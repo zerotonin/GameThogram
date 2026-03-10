@@ -26,55 +26,55 @@ def main():
     # ── Global dark theme ────────────────────────────────────────
     app.setStyleSheet("""
         QWidget {
-            background-color: #2b2d30;
+            background-color: #3c3f41;
             color: #d4d4d4;
             font-size: 12px;
         }
-        QTabWidget::pane { border: 1px solid #444; }
+        QTabWidget::pane { border: 1px solid #555; }
         QTabBar::tab {
-            background: #353739; color: #ccc;
+            background: #484b4d; color: #ccc;
             padding: 6px 14px; margin-right: 2px;
-            border: 1px solid #444; border-bottom: none;
+            border: 1px solid #555; border-bottom: none;
             border-top-left-radius: 4px; border-top-right-radius: 4px;
         }
         QTabBar::tab:selected {
-            background: #2b2d30; color: #fff; font-weight: bold;
+            background: #3c3f41; color: #fff; font-weight: bold;
         }
         QPushButton {
-            background: #404347; color: #e0e0e0;
-            border: 1px solid #555; border-radius: 3px;
+            background: #505356; color: #e0e0e0;
+            border: 1px solid #666; border-radius: 3px;
             padding: 4px 10px;
         }
-        QPushButton:hover { background: #505357; }
-        QPushButton:pressed { background: #606367; }
+        QPushButton:hover { background: #5a5d60; }
+        QPushButton:pressed { background: #656870; }
         QComboBox {
-            background: #404347; color: #e0e0e0;
-            border: 1px solid #555; border-radius: 3px;
+            background: #505356; color: #e0e0e0;
+            border: 1px solid #666; border-radius: 3px;
             padding: 3px 8px;
         }
         QComboBox QAbstractItemView {
-            background: #353739; color: #e0e0e0;
-            selection-background-color: #505357;
+            background: #484b4d; color: #e0e0e0;
+            selection-background-color: #5a5d60;
         }
         QLabel { background: transparent; }
         QLineEdit {
-            background: #353739; color: #e0e0e0;
-            border: 1px solid #555; border-radius: 2px;
+            background: #484b4d; color: #e0e0e0;
+            border: 1px solid #666; border-radius: 2px;
             padding: 2px 4px;
         }
         QCheckBox { background: transparent; }
         QSpinBox {
-            background: #353739; color: #e0e0e0;
-            border: 1px solid #555;
+            background: #484b4d; color: #e0e0e0;
+            border: 1px solid #666;
         }
         QGroupBox {
-            border: 1px solid #555; border-radius: 4px;
+            border: 1px solid #666; border-radius: 4px;
             margin-top: 8px; padding-top: 14px;
             color: #ccc; font-weight: bold;
         }
         QGroupBox::title { subcontrol-origin: margin; left: 10px; }
         QScrollArea { border: none; background: transparent; }
-        QFrame { border-color: #555; }
+        QFrame { border-color: #666; }
     """)
 
     def _cleanup_tmp_icons() -> None:
