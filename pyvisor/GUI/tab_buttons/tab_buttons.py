@@ -319,22 +319,60 @@ class TabButtons(QWidget):
             self.joystick = pygame.joystick.Joystick(self.deviceNumber)
             self.joystick.init()
 
+    @staticmethod
+    def _classify_device(name: str) -> str:
+        """Map a pygame joystick name to an internal device category.
+
+        The KeyBindings model stores bindings under 'X-Box', 'Playstation',
+        'Keyboard', or 'Free'.  This helper maps detected hardware names
+        to the correct category.
+        """
+        low = name.lower()
+        if low == "keyboard":
+            return "Keyboard"
+        if any(tag in low for tag in ("xbox", "x-box", "xinput",
+                                       "microsoft", "360")):
+            return "X-Box"
+        if any(tag in low for tag in ("playstation", "ps2", "ps3", "ps4",
+                                       "ps5", "dualshock", "dualsense",
+                                       "sony", "wireless controller")):
+            return "Playstation"
+        # Anything else (generic gamepads, 8BitDo, etc.)
+        return "Free"
+
     def set_device(self, device: str):
-        if self.gui_data_interface.selected_device is None:
-            QMessageBox.warning(self, 'Set device first!',
-                                "You need to choose an input device first",
-                                QMessageBox.Ok)
-            return
-        self._set_device(device)
+        """Called when the user picks a device from the combo box."""
+        device = str(device)
+        category = self._classify_device(device)
+
+        # Update the background image to the matching controller picture
+        if category in DEVICES:
+            self.pixmap = QPixmap(DEVICES[category])
+            self.background_image.setPixmap(
+                self.pixmap.scaled(self.background_image.size(),
+                                   Qt.KeepAspectRatio))
+            self.background_image.setScaledContents(True)
+
+        # Track which joystick index this is (for pygame init)
+        if device in self.input_device_names:
+            self.deviceNumber = self.input_device_names.index(device)
+
+        # Update the central data model so assign_button sees the right category
+        self.gui_data_interface.selected_device = category
+        self.gui_data_interface.save_state()
+
+        # Initialise the joystick if it is not the keyboard
+        if category != "Keyboard" and self.deviceNumber >= 0:
+            try:
+                self.joystick = pygame.joystick.Joystick(self.deviceNumber)
+                self.joystick.init()
+            except pygame.error as exc:
+                print("Could not initialise joystick {}: {}".format(
+                    self.deviceNumber, exc))
 
     def _set_device(self, device):
-        device = str(device)
-        if self.gui_data_interface.selected_device == device:
-            return
-        self.pixmap = QPixmap(DEVICES[str(device)])
-        self.background_image.setPixmap(self.pixmap.scaled(self.background_image.size(), Qt.KeepAspectRatio))
-        self.background_image.setScaledContents(True)
-        self.deviceNumber = self.input_device_names.index(device)
+        """Programmatic device switch (e.g. on startup)."""
+        self.set_device(device)
 
     @staticmethod
     def _get_default_playstation_keys() -> Dict[str, str]:

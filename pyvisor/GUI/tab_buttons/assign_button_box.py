@@ -131,7 +131,13 @@ class AssignButtonBox(QWidget):
     def button_assignment_changed(self, action: ScorerAction, is_behaviour: bool):
         if action is not self.action:
             return
-        self.button_label.setText(action.key_bindings[self.gui_data_interface.selected_device])
+        binding = action.key_bindings[self.gui_data_interface.selected_device]
+        if binding is None:
+            self.button_label.setText("no button\nassigned")
+            self.button_label.setStyleSheet('color: #C0C0C0')
+        else:
+            self.button_label.setText(binding)
+            self.button_label.setStyleSheet('color: #ffffff')
 
     @staticmethod
     def waitOnUICpress():
