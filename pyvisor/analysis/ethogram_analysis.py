@@ -52,6 +52,14 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
     AnalysisResult
     """
     n_frames, n_cols = data.shape
+
+    # Filter out 'delete' columns — delete is an editing action, not a behaviour
+    keep = [i for i in range(n_cols)
+            if i < len(labels) and 'delete' not in labels[i].lower()]
+    if keep:
+        data = data[:, keep]
+        labels = [labels[i] for i in keep]
+    n_frames, n_cols = data.shape
     total_dur_s = n_frames / fps
 
     stats = []
