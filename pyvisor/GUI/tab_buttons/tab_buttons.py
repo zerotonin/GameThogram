@@ -12,6 +12,7 @@ from pyvisor.GUI.model.behaviour import Behaviour
 from pyvisor.GUI.model.gui_data_interface import GUIDataInterface
 from pyvisor.GUI.model.scorer_action import ScorerAction
 from pyvisor.GUI.tab_buttons.assign_button_box import AssignButtonBox
+from pyvisor.resources import resource_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEVICES = {"Keyboard": HERE + "/../pictures/gamePad_KB.png",
@@ -174,8 +175,10 @@ class TabButtons(QWidget):
         self.lbl_input_assign = QLabel("select device to assign ", self)
         self.lbl_input_assign.setStyleSheet(self.labelStyle)
         self.combo_input_assign = QComboBox(self)
+        self.combo_input_assign.addItem("-- Select Input Device --")
         for device in self.input_device_names:
             self.combo_input_assign.addItem(device)
+        self.combo_input_assign.setCurrentIndex(0)
         # add signal slot for assignment change
         self.combo_input_assign.activated[str].connect(self.set_device)
         self.hboxDeviceChoice.addWidget(self.lbl_input_assign)
@@ -272,8 +275,11 @@ class TabButtons(QWidget):
         animal_box.addWidget(name_label)
 
         if not animal.has_behaviour('delete'):
+            del_icon = str(resource_path('icons', 'game', 'del.png'))
             behav_delete = Behaviour(animal_number=animal.number,
-                                     name="delete")
+                                     name="delete",
+                                     icon_path=del_icon,
+                                     color="#FF2222")
             animal[behav_delete.label] = behav_delete
 
         for key in sorted(animal.behaviours.keys()):
@@ -343,6 +349,8 @@ class TabButtons(QWidget):
     def set_device(self, device: str):
         """Called when the user picks a device from the combo box."""
         device = str(device)
+        if device.startswith("--"):
+            return  # placeholder item
         category = self._classify_device(device)
 
         # Update the background image to the matching controller picture
