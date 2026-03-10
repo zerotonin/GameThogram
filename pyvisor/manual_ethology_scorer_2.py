@@ -66,6 +66,7 @@ class ManualEthologyScorer2:
         self._adjust_window_size()
 
         self.movie.activeFrame = -1
+        self._show_overlay = True  # show key binding overlay on start
 
         self.dio.autosave()
 
@@ -87,8 +88,11 @@ class ManualEthologyScorer2:
             if event.type == pygame.JOYHATMOTION:
                 self._handle_event_joyhatmotion(event)
             if event.type == pygame.KEYDOWN:
-                input_code = event.unicode
-                self.user_input_control.handle_input(input_code)
+                if event.key == pygame.K_F1:
+                    self._show_overlay = not self._show_overlay
+                else:
+                    input_code = event.unicode
+                    self.user_input_control.handle_input(input_code)
         self.refresh_media()
         with self.ethogram.lock:
             self.ethogram.apply_states_at_frame(self.movie.frameNo)
@@ -175,6 +179,8 @@ class ManualEthologyScorer2:
         self.screen.blit(movie_screen, (self.movie_window_offset, 144))
         self._update_icons()
         self._update_text()
+        if self._show_overlay:
+            self._draw_bindings_overlay()
         pygame.display.update()
 
     def _update_icons(self):
@@ -203,6 +209,56 @@ class ManualEthologyScorer2:
         self.screen.blit(label, (self.movie_window_offset + 10, self.movie.height - 45 + 144))
         self.screen.blit(label2, (self.movie_window_offset + 10, self.movie.height - 30 + 144))
         self.screen.blit(label3, (self.movie_window_offset + 10, self.movie.height - 15 + 144))
+
+    def _draw_bindings_overlay(self):
+        """Draw a semi-transparent overlay listing all current key bindings.
+
+        Toggle with F1.
+        """
+        font = pygame.font.SysFont(pygame.font.get_default_font(), 14)
+        line_h = 18
+        pad = 10
+        lines = []
+
+        # Behaviour bindings per animal
+        for an in sorted(self.animals.keys()):
+            animal = self.animals[an]
+            lines.append(("--- {} (A{}) ---".format(animal.name, an),
+                          (200, 200, 255)))
+            for label in sorted(animal.behaviours.keys()):
+                behav = animal.behaviours[label]
+                binding = behav.key_bindings[self.selected_device]
+                btn_str = binding if binding else "?"
+                lines.append(("  {} = {}".format(btn_str, behav.name),
+                              (255, 255, 255)))
+
+        # Movie bindings
+        lines.append(("--- movie controls ---", (200, 200, 255)))
+        for action_name in sorted(self.movie_bindings.keys()):
+            action = self.movie_bindings[action_name]
+            binding = action.key_bindings[self.selected_device]
+            btn_str = binding if binding else "?"
+            lines.append(("  {} = {}".format(btn_str, action_name),
+                          (255, 255, 200)))
+
+        lines.append(("", (0, 0, 0)))
+        lines.append(("  [F1] toggle this overlay", (180, 180, 180)))
+
+        # Draw semi-transparent background
+        overlay_w = 280
+        overlay_h = len(lines) * line_h + pad * 2
+        overlay_surface = pygame.Surface((overlay_w, overlay_h))
+        overlay_surface.set_alpha(180)
+        overlay_surface.fill((20, 20, 40))
+
+        x = self.screen.get_width() - overlay_w - 10
+        y = 150
+        self.screen.blit(overlay_surface, (x, y))
+
+        # Render text lines
+        for i, (text, color) in enumerate(lines):
+            rendered = font.render(text, True, color)
+            self.screen.blit(rendered, (x + pad, y + pad + i * line_h))
 
     @property
     def autosave_settings(self):
