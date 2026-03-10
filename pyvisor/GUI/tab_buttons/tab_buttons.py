@@ -15,11 +15,6 @@ from pyvisor.GUI.tab_buttons.assign_button_box import AssignButtonBox
 from pyvisor.resources import resource_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEVICES = {"Keyboard": HERE + "/../pictures/gamePad_KB.png",
-           "Playstation": HERE + "/../pictures/gamePad_PS.png",
-           "X-Box": HERE + "/../pictures/gamePad_XB.png",
-           "Free": HERE + "/../pictures/gamePad_free.png"}
-
 
 # noinspection PyAttributeOutsideInit
 class TabButtons(QWidget):
