@@ -10,6 +10,7 @@ from ...exception.behaviour_not_in_compatibility_list_exception \
     import BehaviourNotInCompatibilityListException
 
 
+
 class CompatibleBehaviourWidget(QWidget):
 
     def __init__(self, parent_behaviour_widget, behaviour: Behaviour,
