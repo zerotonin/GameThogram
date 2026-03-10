@@ -50,6 +50,13 @@ class AnimalEthogram2:
     def delete_behaviours(self, frame_number: int):
         self._table.loc[frame_number] = [False] * len(self._table.columns)
 
+    def get_active_labels_at_frame(self, frame: int) -> List[str]:
+        """Return list of behaviour labels that are True at *frame*."""
+        if frame < 0 or frame >= len(self._table):
+            return []
+        row = self._table.iloc[frame]
+        return [col for col in self._table.columns if row[col]]
+
     def to_numpy(self) -> np.ndarray:
         return self._table.to_numpy(dtype=int, copy=True)
 
