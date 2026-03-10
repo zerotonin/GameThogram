@@ -198,7 +198,7 @@ class TabResults(QWidget):
         stats = r.behaviour_stats
         labels = [s.label for s in stats]
         values = [s.percentage for s in stats]
-        colours = _pick_colours(len(stats))
+        colours = self._get_behaviour_colours(labels)
         short = [_short(l) for l in labels]
 
         y_pos = np.arange(len(stats))
@@ -206,19 +206,19 @@ class TabResults(QWidget):
         ax.set_yticks(y_pos)
         ax.set_yticklabels(short, fontsize=9, color="white")
         ax.set_xlabel("% of total frames", fontsize=10, color="white")
-        ax.set_xlim(0, max(max(values) * 1.15, 1))
+        ax.set_xlim(0, max(max(values) * 1.15, 1) if values else 1)
         ax.invert_yaxis()
         ax.tick_params(colors="white")
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("none")
+        ax.set_facecolor("#353739")
 
-        # value annotations
         for i, v in enumerate(values):
             ax.text(v + 0.3, i, f"{v:.1f}%", va="center",
                     fontsize=8, color="white")
 
+        self._fig_pct.set_facecolor("#2b2d30")
         self._fig_pct.tight_layout()
         self._canvas_pct.draw()
         self._canvas_pct.parentWidget().setVisible(True)
@@ -232,7 +232,7 @@ class TabResults(QWidget):
         labels = [_short(s.label) for s in stats]
         means = [s.bout_mean_s for s in stats]
         stds = [s.bout_std_s for s in stats]
-        colours = _pick_colours(len(stats))
+        colours = self._get_behaviour_colours([s.label for s in stats])
 
         x_pos = np.arange(len(stats))
         ax.bar(x_pos, means, yerr=stds, color=colours,
@@ -246,8 +246,9 @@ class TabResults(QWidget):
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("none")
+        ax.set_facecolor("#353739")
 
+        self._fig_bout.set_facecolor("#2b2d30")
         self._fig_bout.tight_layout()
         self._canvas_bout.draw()
         self._canvas_bout.parentWidget().setVisible(True)
@@ -274,7 +275,7 @@ class TabResults(QWidget):
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("none")
+        ax.set_facecolor("#353739")
 
         # annotate cells
         thresh = mat.max() / 2.0
@@ -293,9 +294,28 @@ class TabResults(QWidget):
         self._cbar.outline.set_edgecolor("white")
         self._cbar.outline.set_alpha(0.4)
 
+        self._fig_trans.set_facecolor("#2b2d30")
         self._fig_trans.tight_layout()
         self._canvas_trans.draw()
         self._canvas_trans.parentWidget().setVisible(True)
+
+    def _get_behaviour_colours(self, labels):
+        """Look up actual behaviour colours from the GUI data model."""
+        colours = []
+        for label in labels:
+            found = False
+            for an in self.gui_data_interface.animals.values():
+                for behav in an.behaviours.values():
+                    full_label = "{} : {}".format(an.name, behav.name)
+                    if full_label == label and behav.color:
+                        colours.append(behav.color)
+                        found = True
+                        break
+                if found:
+                    break
+            if not found:
+                colours.append(_PALETTE[len(colours) % len(_PALETTE)])
+        return colours
 
     # ──────────────────────────────────────────────────────────────
     #  Export

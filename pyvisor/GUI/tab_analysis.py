@@ -120,33 +120,28 @@ class TabAnalysis(QWidget):
         self.mov_label.resize(280, 40)
         self.mov_label.setStyleSheet(self.labelStyle)
         
-        # Create Button - all supported video formats
-        self.btn_any_video = QPushButton('load video')
-        argList_all = [['*.avi', '*.mov', '*.mp4', '*.mpg', '*.mkv',
-                         '*.wmv', '*.flv', '*.webm', '*.m4v', '*.seq'],
-                        'video loaded: ',
-                        'failed to load video', 'Movie', 'Single']
-        self.btn_any_video.clicked.connect(
-            (lambda al: lambda: self.loadMedia(al))(argList_all))
-        self.hboxMov.addWidget(self.btn_any_video)
-
-        # Create Button Movie loading
-        self.btn_movie = QPushButton('load movie')
-        argList = [['*.avi', '*.mov', '*.mp4', '*.mpg', '*.mkv'], 'movie loaded: ',
-                   'failed to load movie', 'Movie', 'Single']
-        self.btn_movie.clicked.connect((lambda argList: lambda: self.loadMedia(argList))(argList))
+        # Create Button - load video (all supported formats in one filter)
+        self.btn_movie = QPushButton('load video')
+        argList = [['Video files (*.avi *.mov *.mp4 *.mpg *.mkv *.wmv *.flv *.webm *.m4v)',
+                     'All files (*)'],
+                   'video loaded: ',
+                   'failed to load video', 'Movie', 'Single']
+        self.btn_movie.clicked.connect((lambda al: lambda: self.loadMedia(al))(argList))
         self.hboxMov.addWidget(self.btn_movie)
 
         # Create Button Img Sequence loading
         self.btn_image = QPushButton('load image sequence')
-        argList = [ ['*.jpg', '*.png', '*.gif'], 'image sequence loaded: ',
-                    'failed to load image sequence: ', 'ImageSequence', 'Multi']
+        argList = [['Image files (*.jpg *.jpeg *.png *.gif *.tif *.tiff *.bmp)',
+                     'All files (*)'],
+                   'image sequence loaded: ',
+                   'failed to load image sequence: ', 'ImageSequence', 'Multi']
         self.btn_image.clicked.connect((lambda argList: lambda: self.loadMedia(argList))(argList))
         self.hboxMov.addWidget(self.btn_image)
 
         # Create Button Norpix loading
         self.btn_norpix = QPushButton('load Norpix SEQ')
-        argList = [['*.seq'], 'Norpix sequence file loaded: ',
+        argList = [['Norpix files (*.seq)', 'All files (*)'],
+                   'Norpix sequence file loaded: ',
                    'failed to load Norpix sequence file', 'Norpix', 'Single']
         self.btn_norpix.clicked.connect((lambda argList: lambda: self.loadMedia(argList))(argList))
         self.hboxMov.addWidget(self.btn_norpix)
@@ -280,11 +275,18 @@ class TabAnalysis(QWidget):
     def makeBehavInfoBox(self, animal: Animal):
         behavBox = QVBoxLayout()
         nameLabel = QLabel(animal.name + ' (A' + str(animal.number)+')')
-        nameLabel.setStyleSheet(self.labelStyle)
+        nameLabel.setStyleSheet(self.labelStyle + "font-size: 13px;")
         behavBox.addWidget(nameLabel)
         for behav_label in sorted(animal.behaviours.keys()):
             behav = animal.behaviours[behav_label]
             hbox = QHBoxLayout()
+            # colour swatch
+            swatch = QLabel("  ")
+            swatch.setFixedSize(14, 14)
+            swatch.setStyleSheet(
+                "background-color: {}; border: 1px solid #888; border-radius: 2px;".format(
+                    behav.color or "#666"))
+            hbox.addWidget(swatch)
             self._add_name_label(behav, hbox)
             self._add_icon(behav, hbox)
             self._add_keybinding_label(hbox, behav)
@@ -310,7 +312,8 @@ class TabAnalysis(QWidget):
     @staticmethod
     def _add_name_label(behav, hbox):
         behavLabel = QLabel(behav.name)
-        behavLabel.setStyleSheet('color: ' + behav.color)
+        color = behav.color or '#d4d4d4'
+        behavLabel.setStyleSheet('color: {}; font-weight: bold;'.format(color))
         hbox.addWidget(behavLabel)
 
     @staticmethod
