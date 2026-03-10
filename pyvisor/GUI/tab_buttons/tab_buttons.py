@@ -211,17 +211,24 @@ class TabButtons(QWidget):
             self.gui_data_interface.change_button_binding(action, new_button, is_behaviour=False)
 
     def make_movie_actions_box(self) -> QWidget:
-        # top label
+        from PyQt5.QtWidgets import QGridLayout
         movie_widget = QWidget(self)
-        self.movie_box = QVBoxLayout(movie_widget)
+        outer = QVBoxLayout(movie_widget)
         name_label = QLabel('movie actions')
         name_label.setStyleSheet(self.labelStyle)
-        self.movie_box.addWidget(name_label)
-        movie_assignments = self.gui_data_interface.movie_bindings
-        for name in sorted(movie_assignments.keys()):
-            movie_action = movie_assignments[name]
-            self._make_movie_label_box(movie_action, self.movie_box)
+        outer.addWidget(name_label)
 
+        grid = QGridLayout()
+        movie_assignments = self.gui_data_interface.movie_bindings
+        sorted_names = sorted(movie_assignments.keys())
+        n_cols = 2
+        for idx, name in enumerate(sorted_names):
+            movie_action = movie_assignments[name]
+            color = "#d4d4d4"
+            box = self._create_assign_button_box(color, movie_action, is_behaviour=False)
+            self._movie_action_boxes[movie_action.name] = box
+            grid.addWidget(box, idx // n_cols, idx % n_cols)
+        outer.addLayout(grid)
         return movie_widget
 
     def _make_movie_label_box(

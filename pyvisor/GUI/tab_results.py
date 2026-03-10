@@ -212,13 +212,13 @@ class TabResults(QWidget):
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("#353739")
+        ax.set_facecolor("#484b4d")
 
         for i, v in enumerate(values):
             ax.text(v + 0.3, i, f"{v:.1f}%", va="center",
                     fontsize=8, color="white")
 
-        self._fig_pct.set_facecolor("#2b2d30")
+        self._fig_pct.set_facecolor("#3c3f41")
         self._fig_pct.tight_layout()
         self._canvas_pct.draw()
         self._canvas_pct.parentWidget().setVisible(True)
@@ -246,9 +246,9 @@ class TabResults(QWidget):
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("#353739")
+        ax.set_facecolor("#484b4d")
 
-        self._fig_bout.set_facecolor("#2b2d30")
+        self._fig_bout.set_facecolor("#3c3f41")
         self._fig_bout.tight_layout()
         self._canvas_bout.draw()
         self._canvas_bout.parentWidget().setVisible(True)
@@ -275,7 +275,7 @@ class TabResults(QWidget):
         for spine in ax.spines.values():
             spine.set_color("white")
             spine.set_alpha(0.4)
-        ax.set_facecolor("#353739")
+        ax.set_facecolor("#484b4d")
 
         # annotate cells
         thresh = mat.max() / 2.0
@@ -294,7 +294,7 @@ class TabResults(QWidget):
         self._cbar.outline.set_edgecolor("white")
         self._cbar.outline.set_alpha(0.4)
 
-        self._fig_trans.set_facecolor("#2b2d30")
+        self._fig_trans.set_facecolor("#3c3f41")
         self._fig_trans.tight_layout()
         self._canvas_trans.draw()
         self._canvas_trans.parentWidget().setVisible(True)
