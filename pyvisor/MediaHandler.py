@@ -141,13 +141,13 @@ class MediaHandler:
         self._run_forward = False
 
     def increase_fps(self):
-        self.fps += 3
+        self.fps = min(self.fps + 3, 200)
 
     def decrease_fps(self):
-        self.fps -= 3
+        self.fps = max(self.fps - 3, 1)
 
     def set_current_frame_delta(self, delta: int):
-        self.frameNo += delta
+        self.frameNo = max(0, min(self.frameNo + delta, self.length))
 
     def set_stop(self):
         self._run_movie = False
