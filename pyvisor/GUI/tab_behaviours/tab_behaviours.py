@@ -36,17 +36,10 @@ class TabBehaviours(QWidget):
         return stylesheetTab
 
     def _init_background_image(self):
-        self.background_image = QLabel(self)
-        self.background_image.setGeometry(0, 0, self.parent().height(), self.parent().width())
-        self.pixmap = QPixmap(HERE + '/../pictures/behaviour.png')
-        self.background_image.setPixmap(self.pixmap.scaled(
-            self.background_image.size(),
-            Qt.KeepAspectRatio))
-        self.background_image.setScaledContents(True)
-        self.background_image.resize(self.size())
+        pass  # replaced by global dark theme
 
     def resizeEvent(self, event):
-        self.background_image.resize(event.size())
+        pass
 
     def get_number_of_animals(self):
         return len(self.tabs.tabs_)

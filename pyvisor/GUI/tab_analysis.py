@@ -43,8 +43,8 @@ class TabAnalysis(QWidget):
         self._init_layout_boxes()
 
         self.labelStyle = """
-        color: white;
-        background-color: rgba(255, 255, 255, 125);
+        color: #d4d4d4;
+        background-color: transparent;
         margin-top: 2px;
         font-weight: bold;
         """
@@ -71,14 +71,7 @@ class TabAnalysis(QWidget):
         self.vbox.addStretch()
 
     def _init_background_image(self):
-        self.background_image = QLabel(self)
-        self.background_image.setGeometry(0, 0, self.parent.height(), self.parent.width())
-        self.pixmap = QPixmap(HERE + '/pictures/gamePad.png')
-        self.background_image.setPixmap(self.pixmap.scaled(
-            self.background_image.size(),
-            Qt.KeepAspectRatio))
-        self.background_image.setScaledContents(True)
-        self.background_image.resize(self.size())
+        pass  # replaced by global dark theme
 
     def makeBehaviourSummary(self):
         self.clearLayout(self.hboxConciseBehav)
@@ -127,6 +120,16 @@ class TabAnalysis(QWidget):
         self.mov_label.resize(280, 40)
         self.mov_label.setStyleSheet(self.labelStyle)
         
+        # Create Button - all supported video formats
+        self.btn_any_video = QPushButton('load video')
+        argList_all = [['*.avi', '*.mov', '*.mp4', '*.mpg', '*.mkv',
+                         '*.wmv', '*.flv', '*.webm', '*.m4v', '*.seq'],
+                        'video loaded: ',
+                        'failed to load video', 'Movie', 'Single']
+        self.btn_any_video.clicked.connect(
+            (lambda al: lambda: self.loadMedia(al))(argList_all))
+        self.hboxMov.addWidget(self.btn_any_video)
+
         # Create Button Movie loading
         self.btn_movie = QPushButton('load movie')
         argList = [['*.avi', '*.mov', '*.mp4', '*.mpg', '*.mkv'], 'movie loaded: ',
@@ -352,7 +355,7 @@ class TabAnalysis(QWidget):
         movieBox.addWidget(nameLabel)
 
     def resizeEvent(self, event):
-        self.background_image.resize(event.size())                   
+        pass
     def loadMedia(self,argList):
         # build dialogue window
         dlg = QFileDialog(self)

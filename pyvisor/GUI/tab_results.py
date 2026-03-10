@@ -63,17 +63,6 @@ class TabResults(QWidget):
     #  UI construction
     # ──────────────────────────────────────────────────────────────
     def _init_UI(self):
-        # background image
-        self.background_image = QLabel(self)
-        self.background_image.setGeometry(0, 0,
-                                          self.parent.height(),
-                                          self.parent.width())
-        pixmap = QPixmap(os.path.join(HERE, "pictures", "behaviour.png"))
-        self.background_image.setPixmap(
-            pixmap.scaled(self.background_image.size(), Qt.KeepAspectRatio))
-        self.background_image.setScaledContents(True)
-        self.background_image.resize(self.size())
-
         # main layout
         outer = QVBoxLayout(self)
         outer.setContentsMargins(12, 12, 12, 12)
@@ -372,7 +361,7 @@ class TabResults(QWidget):
     #  Qt overrides
     # ──────────────────────────────────────────────────────────────
     def resizeEvent(self, event):
-        self.background_image.resize(event.size())
+        pass
 
 
 def _short(label: str) -> str:

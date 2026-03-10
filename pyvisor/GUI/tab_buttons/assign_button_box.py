@@ -118,6 +118,8 @@ class AssignButtonBox(QWidget):
             button_identifier = str(text)
         else:
             button_identifier = self.waitOnUICpress()
+            if button_identifier is None:
+                return
 
         assigned_action, is_behaviour = self.gui_data_interface.get_action_assigned_to(
             button_identifier)
@@ -141,22 +143,51 @@ class AssignButtonBox(QWidget):
 
     @staticmethod
     def waitOnUICpress():
-        pygame.event.clear()
-        while True:
+        """Wait for a gamepad button/axis/hat press with a visible dialog."""
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel as _QLabel
+        from PyQt5.QtCore import QTimer, Qt as _Qt
+
+        dlg = QDialog()
+        dlg.setWindowTitle("Waiting for gamepad input…")
+        dlg.setMinimumSize(320, 100)
+        layout = QVBoxLayout(dlg)
+        lbl = _QLabel("Press a button, trigger, or move a stick\n"
+                       "on your gamepad to assign it.\n\n"
+                       "Close this window to cancel.")
+        lbl.setAlignment(_Qt.AlignCenter)
+        layout.addWidget(lbl)
+        dlg.setLayout(layout)
+
+        result = [None]
+
+        def poll():
             for event in pygame.event.get():
                 if event.type == pygame.JOYBUTTONDOWN:
-                    inputCode = 'B' + str(event.button)
-                    return inputCode
+                    result[0] = 'B' + str(event.button)
+                    dlg.accept()
+                    return
                 if event.type == pygame.JOYAXISMOTION:
                     value = event.dict['value']
                     axis = event.dict['axis']
                     if abs(value) > 0.75:
-                        if value > 0:
-                            inputCode = 'A' + str(axis) + '+'
-                        else:
-                            inputCode = 'A' + str(axis) + '-'
-                        return inputCode
+                        code = 'A' + str(axis)
+                        code += '+' if value > 0 else '-'
+                        result[0] = code
+                        dlg.accept()
+                        return
                 if event.type == pygame.JOYHATMOTION:
                     value = event.dict['value']
-                    inputCode = 'H' + str(value[0]) + str(value[1])
-                    return inputCode
+                    code = 'H' + str(value[0]) + str(value[1])
+                    if code != 'H00':
+                        result[0] = code
+                        dlg.accept()
+                        return
+
+        timer = QTimer(dlg)
+        timer.timeout.connect(poll)
+        timer.start(50)  # poll every 50 ms
+
+        pygame.event.clear()
+        dlg.exec_()
+        timer.stop()
+        return result[0]

@@ -354,12 +354,7 @@ class TabButtons(QWidget):
         category = self._classify_device(device)
 
         # Update the background image to the matching controller picture
-        if category in DEVICES:
-            self.pixmap = QPixmap(DEVICES[category])
-            self.background_image.setPixmap(
-                self.pixmap.scaled(self.background_image.size(),
-                                   Qt.KeepAspectRatio))
-            self.background_image.setScaledContents(True)
+        # (background images removed for cleaner UI)
 
         # Track which joystick index this is (for pygame init)
         if device in self.input_device_names:
@@ -492,8 +487,8 @@ class TabButtons(QWidget):
         self._make_major_boxes()
         self._add_layouts_to_central_vertical_box()
         self.labelStyle = """
-        color: white;
-        background-color: rgba(255, 255, 255, 125);
+        color: #d4d4d4;
+        background-color: transparent;
         margin-top: 2px;
         font-weight: bold;
         """
@@ -522,14 +517,10 @@ class TabButtons(QWidget):
         self.hboxLoadSavePreset = QHBoxLayout()
 
     def _set_background_image(self):
-        self.background_image = QLabel(self)
-        self.background_image.setGeometry(0, 0, self.parent().height(), self.parent().width())
-        self.pixmap = QPixmap(HERE + '/../pictures/gamePad.png')
-        self.background_image.setPixmap(self.pixmap.scaled(
-            self.background_image.size(),
-            Qt.KeepAspectRatio))
-        self.background_image.setScaledContents(True)
-        self.background_image.resize(self.size())
+        pass  # replaced by global dark theme
+
+    def resizeEvent(self, event):
+        pass
 
     def _initialize_device_members(self):
         self.deviceNumber = -2
