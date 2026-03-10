@@ -55,6 +55,13 @@ class ManualEthologyScorer2:
         if self.movie is None:
             raise RuntimeError("Movie has to be loaded before scorer can be run!")
 
+        # Re-initialize pygame fully (needed for second+ runs after pygame.quit)
+        pygame.init()
+        pygame.joystick.init()
+        for i in range(pygame.joystick.get_count()):
+            joy = pygame.joystick.Joystick(i)
+            joy.init()
+
         pygame.time.Clock()
 
         # setup icons
@@ -74,6 +81,7 @@ class ManualEthologyScorer2:
         while analysing:
             analysing = self._loop()
         self.dio.stop_autosave()
+        self.save_sidecar()  # persist session for seamless resume
         pygame.quit()
 
     def _loop(self) -> bool:
@@ -138,6 +146,91 @@ class ManualEthologyScorer2:
                                                     self.selected_device,
                                                     self.movie,
                                                     self.ethogram)
+        # Try to restore previous session from sidecar
+        self._load_sidecar()
+
+    # ── Sidecar persistence ─────────────────────────────────────
+
+    def _sidecar_path(self) -> str:
+        """Return the sidecar file path: <video_path>.pyvisor.pkl"""
+        if self.movie is None:
+            return ""
+        return self.movie.fileName + ".pyvisor.pkl"
+
+    def save_sidecar(self):
+        """Persist the current ethogram to a sidecar file next to the video."""
+        import pickle as _pickle
+        path = self._sidecar_path()
+        if not path:
+            return
+        data = self.get_data()
+        labels = self.get_labels()
+        if data is False or data is None:
+            return
+        try:
+            with open(path, 'wb') as fh:
+                _pickle.dump({
+                    'data': data,
+                    'labels': labels,
+                    'n_frames': self.movie.length,
+                    'fps': self.movie._movie_fps,
+                    'media_file': self.movie.fileName,
+                }, fh, protocol=_pickle.HIGHEST_PROTOCOL)
+            print("Sidecar saved: {}".format(path))
+        except Exception as exc:
+            print("Failed to save sidecar: {}".format(exc))
+
+    def _load_sidecar(self):
+        """Load a previous session's ethogram from the sidecar file."""
+        import pickle as _pickle
+        path = self._sidecar_path()
+        if not path:
+            return
+        try:
+            with open(path, 'rb') as fh:
+                session = _pickle.load(fh)
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            print("Could not load sidecar: {}".format(exc))
+            return
+
+        saved_data = session.get('data')
+        saved_labels = session.get('labels', [])
+        if saved_data is None or len(saved_labels) == 0:
+            return
+
+        # Check frame count matches
+        n_frames_saved = saved_data.shape[0]
+        if n_frames_saved != self.movie.length:
+            print("Sidecar frame count mismatch ({} vs {}), skipping.".format(
+                n_frames_saved, self.movie.length))
+            return
+
+        # Build a label → column index map from the saved data
+        # Saved labels are like "animal_0 : aggression"
+        # We need to map to ethogram column labels like "A0_aggression"
+        saved_col_map = {}
+        for i, lbl in enumerate(saved_labels):
+            saved_col_map[lbl] = i
+
+        with self.ethogram.lock:
+            for an in sorted(self.ethogram.animal_ethograms.keys()):
+                etho = self.ethogram.animal_ethograms[an]
+                animal = self.animals[an]
+                for col_name in etho._table.columns:
+                    if col_name.endswith('_delete'):
+                        continue
+                    # Reconstruct the formatted label to match saved labels
+                    behav = animal.behaviours.get(col_name)
+                    if behav is None:
+                        continue
+                    formatted = "{} : {}".format(animal.name, behav.name)
+                    if formatted in saved_col_map:
+                        src_col = saved_col_map[formatted]
+                        etho._table[col_name] = saved_data[:, src_col].astype(bool)
+
+        print("Restored previous session from sidecar: {}".format(path))
 
     def _adjust_window_size(self):
         height = self.movie.height
