@@ -190,15 +190,27 @@ class ManualEthologyScorer2:
 
     def _update_icons_of_animal(self, an: int):
         animal_etho = self.ethogram.animal_ethograms[an]
-        state = list(self.ethogram.current_states[an])
-        if len(state) == 0:
+        # Combine live toggle state with recorded ethogram at current frame
+        live_state = set(self.ethogram.current_states[an])
+        recorded = set(animal_etho.get_active_labels_at_frame(self.movie.frameNo))
+        combined = live_state | recorded
+
+        if len(combined) == 0:
             return
-        if 'delete' in state:
+
+        # Check for delete in the live state only
+        delete_label = 'A{}_delete'.format(an)
+        if delete_label in live_state:
             icons = [self._delete_icon]
         else:
-            icons = animal_etho.get_icons(state)
+            # Filter out delete from display
+            display_labels = [l for l in combined if not l.endswith('_delete')]
+            if len(display_labels) == 0:
+                return
+            icons = animal_etho.get_icons(display_labels)
+
         positions = self._icon_positions[an][:len(icons)]
-        blits = [t for t in zip(icons, positions)]
+        blits = list(zip(icons, positions))
         self.screen.blits(blits)
 
     def _update_text(self):
