@@ -95,10 +95,13 @@ class TabResults(QWidget):
             self._make_plot_group("Mean Bout Duration", height=280)
         self._plots_layout.addWidget(grp_bout)
 
-        # transition matrix
+        # transition matrix (global)
         self._fig_trans, self._ax_trans, self._canvas_trans, grp_trans = \
-            self._make_plot_group("Transition Matrix", height=360)
+            self._make_plot_group("Transition Matrix (all animals)", height=360)
         self._plots_layout.addWidget(grp_trans)
+
+        # per-animal transition matrices (created dynamically)
+        self._per_animal_groups = []
 
         self._plots_layout.addStretch()
         scroll.setWidget(scroll_content)
@@ -189,6 +192,7 @@ class TabResults(QWidget):
         self._draw_percentages()
         self._draw_bout_durations()
         self._draw_transition_matrix()
+        self._draw_per_animal_transitions()
 
     def _draw_percentages(self):
         r = self._result
@@ -255,15 +259,42 @@ class TabResults(QWidget):
 
     def _draw_transition_matrix(self):
         r = self._result
-        ax = self._ax_trans
-        ax.clear()
+        self._draw_single_transition(
+            self._fig_trans, self._ax_trans, self._canvas_trans,
+            r.transition_matrix, r.transition_labels,
+            "Transition Matrix (all animals)")
 
-        mat = r.transition_matrix
-        labels = r.transition_labels
+    def _draw_per_animal_transitions(self):
+        """Draw one transition matrix per animal, creating plot groups dynamically."""
+        # Remove old per-animal groups
+        for fig, ax, canvas, grp in self._per_animal_groups:
+            grp.setVisible(False)
+            self._plots_layout.removeWidget(grp)
+            grp.deleteLater()
+        self._per_animal_groups = []
+
+        r = self._result
+        for tr in r.per_animal_transitions:
+            title = "Transitions — {}".format(tr.title)
+            fig, ax, canvas, grp = self._make_plot_group(title, height=320)
+            # Insert before the stretch at the end
+            idx = self._plots_layout.count() - 1
+            self._plots_layout.insertWidget(idx, grp)
+            self._draw_single_transition(fig, ax, canvas, tr.matrix, tr.labels, title)
+            self._per_animal_groups.append((fig, ax, canvas, grp))
+
+    def _draw_single_transition(self, fig, ax, canvas, mat, labels, title):
+        """Draw a transition matrix heatmap with pseudo-log colour scale."""
+        from matplotlib.colors import SymLogNorm
+        # Clear entire figure (removes old colorbars)
+        fig.clear()
+        ax = fig.add_subplot(111)
+
         n = mat.shape[0]
+        vmax = max(mat.max(), 0.01)
+        norm = SymLogNorm(linthresh=0.01, linscale=0.5, vmin=0, vmax=vmax)
 
-        im = ax.imshow(mat, cmap="YlOrRd", aspect="auto",
-                       vmin=0, vmax=max(mat.max(), 0.01))
+        im = ax.imshow(mat, cmap="YlOrRd", aspect="auto", norm=norm)
 
         ax.set_xticks(np.arange(n))
         ax.set_yticks(np.arange(n))
@@ -286,18 +317,15 @@ class TabResults(QWidget):
                 ax.text(j, i, f"{val:.2f}", ha="center", va="center",
                         fontsize=7, color=color)
 
-        # colour bar
-        if hasattr(self, '_cbar') and self._cbar is not None:
-            self._cbar.remove()
-        self._cbar = self._fig_trans.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        self._cbar.ax.tick_params(colors="white", labelsize=8)
-        self._cbar.outline.set_edgecolor("white")
-        self._cbar.outline.set_alpha(0.4)
+        cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        cb.ax.tick_params(colors="white", labelsize=8)
+        cb.outline.set_edgecolor("white")
+        cb.outline.set_alpha(0.4)
 
-        self._fig_trans.set_facecolor("#3c3f41")
-        self._fig_trans.tight_layout()
-        self._canvas_trans.draw()
-        self._canvas_trans.parentWidget().setVisible(True)
+        fig.set_facecolor("#3c3f41")
+        fig.tight_layout()
+        canvas.draw()
+        canvas.parentWidget().setVisible(True)
 
     def _get_behaviour_colours(self, labels):
         """Look up actual behaviour colours from the GUI data model."""
@@ -363,9 +391,8 @@ class TabResults(QWidget):
 
     def _export_figure(self, plot_title: str, path: str, fmt: str):
         fig = self._get_fig_for_title(plot_title)
-        # For export, create a clean copy with white text on transparent bg
         fig.savefig(path, format=fmt, dpi=200, transparent=False,
-                    facecolor="#2b2b2b", edgecolor="none",
+                    facecolor="#3c3f41", edgecolor="none",
                     bbox_inches="tight")
 
     def _get_fig_for_title(self, title: str) -> Figure:
@@ -373,7 +400,11 @@ class TabResults(QWidget):
             return self._fig_pct
         elif "Bout" in title:
             return self._fig_bout
-        elif "Transition" in title:
+        elif "Transition" in title or "Transitions" in title:
+            # Check per-animal groups first
+            for fig, ax, canvas, grp in self._per_animal_groups:
+                if grp.title() and grp.title() in title:
+                    return fig
             return self._fig_trans
         return self._fig_pct
 
