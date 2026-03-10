@@ -162,63 +162,122 @@ class dataIO:
 
         workbook.close()
     
-    def saveOverlayMovie(self,dPos,prefix = 'frame',extension = 'png'):
-        # shortHand
-        movLen   = self.parent.movie.length
-        digitNum = len(str(movLen))
-        # get rid of qStrings as pygame.image.save cannot use it
-        dPos   = str(dPos)
+    def saveOverlayMovie(self, fPos, prefix='frame', extension='mp4'):
+        """Export the scored video as an actual video file with icon overlays.
+
+        If *extension* is 'mp4' or 'avi', a proper video file is written
+        using PyAV.  For image formats ('png', 'jpeg', 'bmp', 'tga') a
+        numbered image sequence is written instead.
+        """
+        scorer = self.parent
+        if not hasattr(scorer, 'screen') or scorer.screen is None:
+            print("saveOverlayMovie: scorer screen not available")
+            return
+
+        movLen = scorer.movie.length
+        fPos = str(fPos)
         prefix = str(prefix)
         extension = str(extension)
-        # stop movie
-        origRunMovFlag = self.parent.runMov
-        origRefreshMediaFlag = self.parent.refreshMediaFlag
-        for i in range(movLen-1):
-            fName = prefix + '_' + str(i).zfill(digitNum) + '.' + extension
-            fPos = os.path.join(dPos,fName)
-            # get frame from media
-            frame = self.parent.movie.getFrame(i)
-            # draw frame to screen
-            movie_screen=pygame.surfarray.make_surface(np.rot90(frame))
-            #update the movie
-            self.parent.screen.blit(movie_screen,(0,0))
-            # update icons
-            self.parent.updateIcons()
-            pygame.display.update()
-            #save image
-            image = self.parent.window.get_surface()
-            print(fPos)
-            pygame.image.save(image, str(fPos))
-            sleep(0.1)
 
+        is_video = extension.lower() in ('mp4', 'avi', 'mkv', 'mov')
 
-        # restore original flag status
-        self.parent.runMov = origRunMovFlag
-        self.parent.refreshMediaFlag = origRefreshMediaFlag
+        if is_video:
+            self._export_as_video(scorer, fPos, prefix, extension, movLen)
+        else:
+            self._export_as_image_sequence(scorer, fPos, prefix, extension, movLen)
 
-    def saveOverlayImage(self,fPos,targetFrame =37):
-        # This function saves a single frame
-        # stop movie
-        origRunMovFlag = self.parent.runMov
-        origRefreshMediaFlag = self.parent.refreshMediaFlag
+    def _export_as_video(self, scorer, dPos, prefix, extension, movLen):
+        """Write an mp4/avi video with overlays using PyAV."""
+        try:
+            import av as _av
+        except ImportError:
+            print("PyAV is required for video export. Install with: pip install av")
+            return
 
-        self.parent.runMov = False
-        self.parent.refreshMediaFlag = False
-        # get frame from media
-        frame = self.parent.movie.getFrame(targetFrame)
-        # draw frame to screen
-        movie_screen=pygame.surfarray.make_surface(np.rot90(frame))
-        #update the movie
-        self.parent.screen.blit(movie_screen,(0,0))
-        # update icons
-        self.parent.updateIcons()
-        pygame.display.update()
-        #save image
-        image = self.parent.window.get_surface()
-        pygame.image.save(image, str(fPos))
-        # restore original flag status
-        self.parent.runMov = origRunMovFlag
-        self.parent.refreshMediaFlag = origRefreshMediaFlag
+        out_path = os.path.join(dPos, "{}.{}".format(prefix, extension))
+        width = scorer.screen.get_width()
+        height = scorer.screen.get_height()
+        fps = int(scorer.movie._movie_fps)
+
+        container = _av.open(out_path, mode='w')
+        stream = container.add_stream('h264', rate=fps)
+        stream.width = width
+        stream.height = height
+        stream.pix_fmt = 'yuv420p'
+
+        for i in range(movLen - 1):
+            surface = self._render_frame(scorer, i)
+            # Convert pygame surface → numpy array (H, W, 3)
+            arr = pygame.surfarray.array3d(surface)
+            # pygame gives (W, H, 3) transposed — fix it
+            arr = np.transpose(arr, (1, 0, 2))
+            frame = _av.VideoFrame.from_ndarray(arr, format='rgb24')
+            for packet in stream.encode(frame):
+                container.mux(packet)
+            if i % 100 == 0:
+                print("Exporting frame {}/{}".format(i, movLen))
+
+        # Flush
+        for packet in stream.encode():
+            container.mux(packet)
+        container.close()
+        print("Video exported: {}".format(out_path))
+
+    def _export_as_image_sequence(self, scorer, dPos, prefix, extension, movLen):
+        """Write numbered image files with overlays."""
+        digitNum = len(str(movLen))
+        for i in range(movLen - 1):
+            fName = '{}_{}.{}'.format(prefix, str(i).zfill(digitNum), extension)
+            fPath = os.path.join(dPos, fName)
+            surface = self._render_frame(scorer, i)
+            pygame.image.save(surface, str(fPath))
+            if i % 100 == 0:
+                print("Exporting frame {}/{}".format(i, movLen))
+        print("Image sequence exported to: {}".format(dPos))
+
+    def saveOverlayImage(self, fPos, targetFrame=37):
+        """Save a single frame with behaviour icon overlays."""
+        scorer = self.parent
+        if not hasattr(scorer, 'screen') or scorer.screen is None:
+            print("saveOverlayImage: scorer screen not available")
+            return
+
+        surface = self._render_frame(scorer, targetFrame)
+        pygame.image.save(surface, str(fPos))
+        print("Frame {} saved to: {}".format(targetFrame, fPos))
+
+    @staticmethod
+    def _render_frame(scorer, frame_number):
+        """Render a single frame with overlays to a new surface."""
+        from PIL import Image as _Image
+
+        # Get the raw video frame
+        raw = scorer.movie.getFrame(frame_number)
+        raw = _Image.fromarray(raw).convert('RGB')
+        movie_screen = pygame.surfarray.make_surface(np.rot90(raw))
+
+        # Draw onto the scorer's screen
+        scorer.screen.fill((0, 0, 0))
+        scorer.screen.blit(movie_screen, (scorer.movie_window_offset, 144))
+
+        # Draw icons for this frame
+        if scorer.ethogram is not None:
+            with scorer.ethogram.lock:
+                scorer.ethogram.apply_states_at_frame(frame_number)
+                scorer._update_icons()
+
+        # Draw frame info text
+        myfont = pygame.font.SysFont(pygame.font.get_default_font(), 15)
+        label = myfont.render("frame: " + str(frame_number), 1, (255, 255, 0))
+        label2 = myfont.render("time: {:.1f} s".format(
+            frame_number / scorer.movie._movie_fps), 1, (255, 255, 0))
+        scorer.screen.blit(label, (scorer.movie_window_offset + 10,
+                                    scorer.movie.height - 45 + 144))
+        scorer.screen.blit(label2, (scorer.movie_window_offset + 10,
+                                     scorer.movie.height - 30 + 144))
+
+        # Return a copy of the surface
+        return scorer.screen.copy()
 
     def saveAsPy(self,fpos,data):
         with open(fpos, 'wb') as handle:

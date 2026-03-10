@@ -467,24 +467,45 @@ class TabAnalysis(QWidget):
                                 "to be open.\nRun the scorer and use this while it is running.",
                                 QMessageBox.Ok)
             return
-        goOn = True
-        if dirname == 'verboseMode':
-            dirname = QFileDialog.getExistingDirectory(self, 'Frame Directory', HOME)
-        if not dirname:
-            goOn = False
-        if prefix == 'verboseMode' and goOn:
-            prefix, ok = QInputDialog.getText(self, 'Choose', 'Prefix for image files',
-                                              QLineEdit.Normal, 'frame')
+
+        # Choose format
+        exts = ("mp4 (video)", "avi (video)", "png (image sequence)",
+                "jpeg (image sequence)")
+        ext_choice, ok = QInputDialog.getItem(
+            self, "Export format", "Select output format:", exts, 0, False)
+        if not ok:
+            return
+        extension = ext_choice.split()[0]  # "mp4", "avi", "png", or "jpeg"
+        is_video = extension in ('mp4', 'avi')
+
+        if is_video:
+            # For video: pick output directory, use a default prefix
+            dirname = QFileDialog.getExistingDirectory(
+                self, 'Output directory', HOME)
+            if not dirname:
+                return
+            prefix, ok = QInputDialog.getText(
+                self, 'Choose', 'Video filename (without extension):',
+                QLineEdit.Normal, 'scored_video')
             if not ok:
-                goOn = False
-        if extension == 'verboseMode' and goOn:
-            exts = ("png", "jpeg", "bmp", "tga")
-            extension, ok = QInputDialog.getItem(self, "select file format",
-                                                 "list of formats", exts, 0, False)
+                return
+        else:
+            # For image sequence: pick directory and prefix
+            dirname = QFileDialog.getExistingDirectory(
+                self, 'Output directory for frames', HOME)
+            if not dirname:
+                return
+            prefix, ok = QInputDialog.getText(
+                self, 'Choose', 'Prefix for image files',
+                QLineEdit.Normal, 'frame')
             if not ok:
-                goOn = False
-        if goOn:
-            self.manual_scorer.dio.saveOverlayMovie(dirname, prefix, extension)
+                return
+
+        QMessageBox.information(
+            self, "Export started",
+            "Exporting in the background.\nCheck the terminal for progress.",
+            QMessageBox.Ok)
+        self.manual_scorer.dio.saveOverlayMovie(dirname, prefix, extension)
 
     def getFileName(self,title,path,fileFilter,mode):
         if mode == 'load':
