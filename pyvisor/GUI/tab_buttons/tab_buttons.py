@@ -504,7 +504,6 @@ class TabButtons(QWidget):
         self.setLayout(self.vbox)
 
     def _fill_major_boxes_with_infos(self):
-        self.make_joystick_info()
         self.make_animals_box()
         self.make_device_choice()
 
