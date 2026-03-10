@@ -29,7 +29,7 @@ class GUIDataInterface:
         self.selected_device = None  # type: Union[str, None]
         self.manual_scorer = None  # type: Union[None, ManualEthologyScorer]
         self.autosave_settings = {
-            "enabled": False,
+            "enabled": True,
             "interval_seconds": 300,
             "directory": str(ensure_autosave_dir())
         }
