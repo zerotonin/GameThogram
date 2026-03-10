@@ -45,7 +45,6 @@ include = ["pyvisor", "pyvisor.*"]
     "guidefaults_animals.json",
     "guidefaults_movscoregui.pkl",
     "ana.npy",
-    "pictures/*",
     "xwing.png",
 ]
 "pyvisor.resources" = ["**/*"]
