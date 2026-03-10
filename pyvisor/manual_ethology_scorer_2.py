@@ -39,7 +39,7 @@ class ManualEthologyScorer2:
         self.movie = None  # type: Union[None, MediaHandler]
         self.user_input_control = None  # type: Union[None, UserInputControl2]
         self._autosave_settings = {
-            'enabled': False,
+            'enabled': True,
             'interval_seconds': 300,
             'directory': ''
         }
