@@ -9,7 +9,9 @@ import pickle
 
 from PyQt5.QtCore import QRect
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QTabWidget, QMessageBox, QApplication, QHBoxLayout, QLabel)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QTabWidget, QMessageBox,
+                             QApplication, QHBoxLayout, QLabel, QPushButton,
+                             QFileDialog)
 
 from pyvisor.GUI.model.movie_bindings import MovieBindings
 from .model.animal import Animal
@@ -91,6 +93,21 @@ class MovScoreGUI(QWidget):
         self._initiate_tabs(vbox)
 
     def _initiate_tabs(self, vbox):
+        # ---- toolbar for save / load ----
+        toolbar = QHBoxLayout()
+        btn_save = QPushButton("Save settings…")
+        btn_save.setStyleSheet("font-weight: bold; padding: 4px 12px;")
+        btn_save.clicked.connect(self._export_settings_json)
+        toolbar.addWidget(btn_save)
+
+        btn_load = QPushButton("Load settings…")
+        btn_load.setStyleSheet("font-weight: bold; padding: 4px 12px;")
+        btn_load.clicked.connect(self._import_settings_json)
+        toolbar.addWidget(btn_load)
+        toolbar.addStretch()
+        vbox.addLayout(toolbar)
+
+        # ---- tabs ----
         self.tabs = QTabWidget()
         vbox.addWidget(self.tabs)
         self.tab_behaviours = TabBehaviours(self, self.gui_data_interface)
@@ -145,6 +162,55 @@ class MovScoreGUI(QWidget):
         settings_file = settings_path('guidefaults_movscoregui.pkl')
         with settings_file.open('wb') as f:
             pickle.dump(self.values, f, pickle.HIGHEST_PROTOCOL)
+
+    # ── Save / Load entire configuration as portable JSON ───────
+
+    def _export_settings_json(self):
+        """Export animals, behaviours, key bindings, and device to a JSON file."""
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save pyVISOR settings", "",
+            "JSON files (*.json)")
+        if not path:
+            return
+        state = self.gui_data_interface.get_savable_dict()
+        try:
+            with open(path, 'w') as fh:
+                json.dump(state, fh, indent=2)
+            QMessageBox.information(self, "Settings saved",
+                                    "Configuration saved to:\n{}".format(path),
+                                    QMessageBox.Ok)
+        except Exception as exc:
+            QMessageBox.critical(self, "Save failed", str(exc),
+                                 QMessageBox.Ok)
+
+    def _import_settings_json(self):
+        """Import a previously saved JSON configuration.
+
+        This will **replace** the current animals, behaviours and key
+        bindings.  The GUI must be restarted for the changes to take
+        full effect.
+        """
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load pyVISOR settings", "",
+            "JSON files (*.json)")
+        if not path:
+            return
+        try:
+            with open(path, 'r') as fh:
+                state = json.load(fh)
+            # Persist into the user‐data directory so it is loaded on restart
+            settings_file = settings_path('guidefaults_animals.json')
+            settings_file.parent.mkdir(parents=True, exist_ok=True)
+            with settings_file.open('wt') as fh:
+                json.dump(state, fh, indent=2)
+            QMessageBox.information(
+                self, "Settings loaded",
+                "Configuration loaded from:\n{}\n\n"
+                "Please restart pyVISOR for the changes to take effect.".format(path),
+                QMessageBox.Ok)
+        except Exception as exc:
+            QMessageBox.critical(self, "Load failed", str(exc),
+                                 QMessageBox.Ok)
 
 
 if __name__ == "__main__":
