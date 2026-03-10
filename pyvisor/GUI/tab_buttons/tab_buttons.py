@@ -192,6 +192,10 @@ class TabButtons(QWidget):
         button_default_bindings.clicked.connect(self._set_default_movie_bindings)
         self.hboxDeviceChoice.addWidget(button_default_bindings)
 
+        button_device_info = QPushButton("Device info…")
+        button_device_info.clicked.connect(self._show_device_info)
+        self.hboxDeviceChoice.addWidget(button_device_info)
+
         self.hboxDeviceChoice.addStretch()
 
     def _set_default_movie_bindings(self):
@@ -463,6 +467,61 @@ class TabButtons(QWidget):
 
     def _reset_buttons(self):
         self.gui_data_interface.reset_all_bindings()
+
+    def _show_device_info(self):
+        """Show detected device details in a popup dialog."""
+        from PyQt5.QtWidgets import QDialog, QTextEdit
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Detected Input Devices")
+        dlg.setMinimumSize(450, 350)
+        layout = QVBoxLayout(dlg)
+        text = QTextEdit()
+        text.setReadOnly(True)
+
+        lines = []
+        for joyI in range(self.n_joysticks):
+            name = self.input_device_names[joyI]
+            category = self._classify_device(name)
+            lines.append("<b>{}</b>  (mapped to: {})".format(name, category))
+            lines.append("  Axes: {}  |  Buttons: {}  |  Hats: {}".format(
+                self.axesNum[joyI], self.buttonsNum[joyI], self.hatsNum[joyI]))
+            lines.append("  Axes: " + ", ".join(
+                "A{}+/A{}-".format(i, i) for i in range(self.axesNum[joyI])))
+            lines.append("  Buttons: " + ", ".join(
+                "B{}".format(i) for i in range(self.buttonsNum[joyI])))
+            if self.hatsNum[joyI] > 0:
+                lines.append("  Hats: " + ", ".join(
+                    "H{}".format(i) for i in range(self.hatsNum[joyI])))
+            lines.append("")
+
+        lines.append("<b>Keyboard</b> (always available)")
+        lines.append("")
+
+        if self.n_joysticks == 0:
+            lines.insert(0, "<i>No gamepads detected. Plug in a controller "
+                            "and restart pyVISOR.</i>")
+            lines.insert(1, "")
+
+        # Current bindings summary
+        dev = self.gui_data_interface.selected_device
+        if dev:
+            lines.append("<b>Current bindings (device: {})</b>".format(dev))
+            for an in sorted(self.gui_data_interface.animals.keys()):
+                animal = self.gui_data_interface.animals[an]
+                for label in sorted(animal.behaviours.keys()):
+                    behav = animal.behaviours[label]
+                    binding = behav.key_bindings[dev]
+                    btn = binding if binding else "<i>unassigned</i>"
+                    lines.append("  {} → {}".format(btn, behav.name))
+            for action_name in sorted(self.gui_data_interface.movie_bindings.keys()):
+                action = self.gui_data_interface.movie_bindings[action_name]
+                binding = action.key_bindings[dev]
+                btn = binding if binding else "<i>unassigned</i>"
+                lines.append("  {} → {}".format(btn, action_name))
+
+        text.setHtml("<pre style='font-size:11px'>" + "<br>".join(lines) + "</pre>")
+        layout.addWidget(text)
+        dlg.exec_()
 
     def _initialize_joystick(self):
         # Get count of joysticks

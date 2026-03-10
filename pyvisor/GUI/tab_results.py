@@ -156,31 +156,55 @@ class TabResults(QWidget):
     # ──────────────────────────────────────────────────────────────
     def _on_refresh(self):
         scorer = self.gui_data_interface.manual_scorer
-        if scorer is None:
-            QMessageBox.warning(
-                self, "No scorer running",
-                "You need to run the scorer and annotate some video before "
-                "analysis results can be shown.",
-                QMessageBox.Ok)
-            return
+        data = None
+        labels = []
+        fps = 25.0
 
-        data = scorer.get_data()
+        # Try 1: get live data from scorer
+        if scorer is not None:
+            data = scorer.get_data()
+            labels = scorer.get_labels()
+            if hasattr(scorer, 'movie') and scorer.movie is not None:
+                fps = float(getattr(scorer.movie, '_movie_fps',
+                                    getattr(scorer.movie, 'fps', 25)))
+
+        # Try 2: fall back to sidecar file
+        if (data is False or data is None) and scorer is not None:
+            data, labels, fps = self._load_from_sidecar(scorer)
+
         if data is False or data is None or (hasattr(data, 'size') and data.size == 0):
             QMessageBox.warning(
-                self, "No data yet",
-                "The scorer has not recorded any annotation data yet. "
-                "Please score at least part of a video first.",
+                self, "No data available",
+                "No annotation data found. Either:\n"
+                "• Run the scorer and annotate some video, or\n"
+                "• Load a video that has a .pyvisor.pkl sidecar file.",
                 QMessageBox.Ok)
             return
-
-        labels = scorer.get_labels()
-        fps = 25.0
-        if hasattr(scorer, 'movie') and scorer.movie is not None:
-            fps = float(getattr(scorer.movie, '_movie_fps',
-                                getattr(scorer.movie, 'fps', 25)))
 
         self._result = analyse_ethogram(data, labels, fps)
         self._draw_all()
+
+    @staticmethod
+    def _load_from_sidecar(scorer):
+        """Try to load data from the sidecar pickle."""
+        import pickle as _pickle
+        path = scorer._sidecar_path() if hasattr(scorer, '_sidecar_path') else ""
+        if not path:
+            return None, [], 25.0
+        try:
+            with open(path, 'rb') as fh:
+                session = _pickle.load(fh)
+            data = session.get('data')
+            labels = session.get('labels', [])
+            fps = session.get('fps', 25.0)
+            if data is not None:
+                print("Results loaded from sidecar: {}".format(path))
+            return data, labels, fps
+        except FileNotFoundError:
+            return None, [], 25.0
+        except Exception as exc:
+            print("Could not load sidecar for results: {}".format(exc))
+            return None, [], 25.0
 
     # ──────────────────────────────────────────────────────────────
     #  Drawing

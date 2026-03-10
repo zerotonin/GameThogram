@@ -12,11 +12,6 @@ from .model.behaviour import Behaviour
 from .model.gui_data_interface import GUIDataInterface
 from ..ManualEthologyScorer import ManualEthologyScorer
 from ..manual_ethology_scorer_2 import ManualEthologyScorer2
-
-try:
-    import thread as _thread
-except ImportError:
-    import _thread
 from itertools import chain
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
@@ -62,12 +57,13 @@ class TabAnalysis(QWidget):
         self.hboxAutosave = QHBoxLayout()
         self.hboxConciseBehav = QHBoxLayout()
         self.hboxCommand = QHBoxLayout()
-        # Comment out the following line to see desired output.
+        self.hboxExport = QHBoxLayout()
         self.vbox.addStretch()
         self.vbox.addLayout(self.hboxConciseBehav)
         self.vbox.addLayout(self.hboxMov)
         self.vbox.addLayout(self.hboxAutosave)
         self.vbox.addLayout(self.hboxCommand)
+        self.vbox.addLayout(self.hboxExport)
         self.vbox.addStretch()
 
     def _init_background_image(self):
@@ -222,52 +218,57 @@ class TabAnalysis(QWidget):
         scorer.dio.autosave()
 
     def makeCommandoRow(self):
-        # ------------------------
-        #       command widgets
-        # ------------------------
-
-        # Create step label
-        self.com_stepLabel = QLabel('Step 3 Run Load Save: ')
-        self.com_stepLabel.resize(60,40)
+        # ── Step 3: Run scorer ──
+        self.com_stepLabel = QLabel('Step 3  Run Scorer: ')
+        self.com_stepLabel.resize(60, 40)
         self.com_stepLabel.setStyleSheet(self.labelStyle)
         self.hboxCommand.addWidget(self.com_stepLabel)
-        
-        # Create Button to run scorer
-        self.com_run=QPushButton('run scorer')
+
+        self.com_run = QPushButton('run scorer')
         self.com_run.clicked.connect(self.runScorer)
         self.hboxCommand.addWidget(self.com_run)
+        self.hboxCommand.addStretch()
 
-        # Create Button to load existing data
-        self.com_load=QPushButton('load data')
-        self.com_load.clicked.connect(self.loadData)
-        self.hboxCommand.addWidget(self.com_load)
+        # ── Step 4: Export data ──
+        self.export_stepLabel = QLabel('Step 4  Export: ')
+        self.export_stepLabel.resize(60, 40)
+        self.export_stepLabel.setStyleSheet(self.labelStyle)
+        self.hboxExport.addWidget(self.export_stepLabel)
 
-        # Create Button to save data
-        self.com_save=QPushButton('save data')
-        self.com_save.clicked.connect(self.saveData)
-        self.hboxCommand.addWidget(self.com_save)
-        
-        # Create Button to export data
-        self.com_exportFrame=QPushButton('export single frame')
-        self.com_exportFrame.clicked.connect(self.exportFrame)
-        self.hboxCommand.addWidget(self.com_exportFrame)
+        # Data format label + combo
+        fmt_label = QLabel('data format:')
+        fmt_label.setStyleSheet(self.labelStyle)
+        self.hboxExport.addWidget(fmt_label)
 
-        # Create Button to export data
-        self.com_exportMovie=QPushButton('export movie ')
-        self.com_exportMovie.clicked.connect(self.exportMovie)
-        self.hboxCommand.addWidget(self.com_exportMovie)
-
-        # Create Button to export data
-        self.com_export=QPushButton('export data')
-        self.com_export.clicked.connect(self.exportData)
-        self.hboxCommand.addWidget(self.com_export)
-
-        #Create ComboBox for export
-        self.modeDict = {'choose format':'choose format','clear text':'text','pickle':'pickle','MatLab':'matLab','MS Excel':'xlsx'}
+        self.modeDict = {'clear text': 'text', 'pickle': 'pickle',
+                         'MatLab': 'matLab', 'MS Excel': 'xlsx'}
         self.comboBox = QComboBox(self)
         self.comboBox.addItems(self.modeDict.keys())
-        self.hboxCommand.addWidget(self.comboBox)
-        self.hboxCommand.addStretch()
+        self.comboBox.setCurrentIndex(0)
+        self.hboxExport.addWidget(self.comboBox)
+
+        # Export data button
+        self.com_export = QPushButton('export data')
+        self.com_export.clicked.connect(self.exportData)
+        self.hboxExport.addWidget(self.com_export)
+
+        # Export single frame (overlay screenshot)
+        self.com_exportFrame = QPushButton('export single frame')
+        self.com_exportFrame.clicked.connect(self.exportFrame)
+        self.com_exportFrame.setToolTip(
+            'Save a single frame with behaviour icon overlays.\n'
+            'Only works while the scorer is actively running.')
+        self.hboxExport.addWidget(self.com_exportFrame)
+
+        # Export movie (overlay screenshot sequence)
+        self.com_exportMovie = QPushButton('export movie')
+        self.com_exportMovie.clicked.connect(self.exportMovie)
+        self.com_exportMovie.setToolTip(
+            'Save all frames with behaviour icon overlays.\n'
+            'Only works while the scorer is actively running.')
+        self.hboxExport.addWidget(self.com_exportMovie)
+
+        self.hboxExport.addStretch()
         
     def close_event(self):        
         self.tabs.close_event()
@@ -413,75 +414,77 @@ class TabAnalysis(QWidget):
                                 QMessageBox.Ok)
             
     def exportData(self, irrelevant, filename='verboseMode',):
-        
+        if self.manual_scorer is None:
+            QMessageBox.warning(self, 'No data',
+                                "Run the scorer first.", QMessageBox.Ok)
+            return
+
         mode = str(self.comboBox.currentText())
-   
-        if mode == 'choose format':
-            QMessageBox.warning(self, 'Data Saving Aborted!',
-                                "Data was  not saved! You need to choose a format",
-                                QMessageBox.Ok)     
+
+        if filename == 'verboseMode':
+            filename = self.getFileName(title='Export Data', path=HOME,
+                                        fileFilter=self.modeDict[mode], mode='save')
+
+        if filename:
+            self.manual_scorer.save_data(str(filename), self.modeDict[mode])
         else:
-            
-            if filename == 'verboseMode':
-                filename = self.getFileName(title='Save Results', path=HOME, fileFilter = self.modeDict[mode], mode ='save')
-        
-            if filename:
-                self.manual_scorer.save_data(str(filename), self.modeDict[mode])
-            else:
-                QMessageBox.warning(self, 'Data Saving Aborted!',
-                                    "Data was  not saved!",
-                                    QMessageBox.Ok)
+            QMessageBox.warning(self, 'Export Aborted!',
+                                "Data was not exported!",
+                                QMessageBox.Ok)
                 
-    def exportFrame(self, irrelevant, filename='verboseMode',frameNo = 'verboseMode'):
+    def exportFrame(self, irrelevant, filename='verboseMode', frameNo='verboseMode'):
+        if self.manual_scorer is None:
+            QMessageBox.warning(self, 'No scorer',
+                                "Run the scorer first.", QMessageBox.Ok)
+            return
+        if not hasattr(self.manual_scorer, 'screen'):
+            QMessageBox.warning(self, 'Not available',
+                                "Frame overlay export requires the scorer window "
+                                "to be open.\nRun the scorer and use this while it is running.",
+                                QMessageBox.Ok)
+            return
         goOn = True
         if filename == 'verboseMode':
-            filename = self.getFileName(title='Save Results', path=HOME, fileFilter = '*.jpg', mode ='save')
-        
-        if filename:
-            goOn = True
-        else:
+            filename = self.getFileName(title='Save Frame', path=HOME, fileFilter='*.jpg', mode='save')
+        if not filename:
             goOn = False
-
         if frameNo == 'verboseMode' and goOn:
             frameNo, ok = QInputDialog.getInt(self, 'Choose', 'Frame Number:')
-            if ok:       
-                goOn = True
-            else:
+            if not ok:
                 goOn = False
         if goOn:
-            self.manual_scorer.dIO.saveOverlayImage(str(filename), frameNo)
-            
-    def exportMovie(self,  irrelevant, dirname='verboseMode',
+            self.manual_scorer.dio.saveOverlayImage(str(filename), frameNo)
+
+    def exportMovie(self, irrelevant, dirname='verboseMode',
                     prefix='verboseMode', extension='verboseMode'):
+        if self.manual_scorer is None:
+            QMessageBox.warning(self, 'No scorer',
+                                "Run the scorer first.", QMessageBox.Ok)
+            return
+        if not hasattr(self.manual_scorer, 'screen'):
+            QMessageBox.warning(self, 'Not available',
+                                "Movie overlay export requires the scorer window "
+                                "to be open.\nRun the scorer and use this while it is running.",
+                                QMessageBox.Ok)
+            return
         goOn = True
-        
         if dirname == 'verboseMode':
-           dirname = QFileDialog.getExistingDirectory(self, 'Frame Directory', HOME)
-
-        if dirname:
-            goOn = True
-        else:
+            dirname = QFileDialog.getExistingDirectory(self, 'Frame Directory', HOME)
+        if not dirname:
             goOn = False
-
         if prefix == 'verboseMode' and goOn:
-            prefix , ok = QInputDialog.getText(self, 'Choose', 'Prefix for image files',
-                                               QLineEdit.Normal, 'frame')
-            if ok:       
-                goOn = True
-            else:
+            prefix, ok = QInputDialog.getText(self, 'Choose', 'Prefix for image files',
+                                              QLineEdit.Normal, 'frame')
+            if not ok:
                 goOn = False
-
-        if extension  == 'verboseMode' and goOn:
+        if extension == 'verboseMode' and goOn:
             exts = ("png", "jpeg", "bmp", "tga")
-            extension, ok = QInputDialog.getItem(self, "select file format", 
-                                                       "list of formats", exts, 0, False)
-            if ok:       
-                goOn = True
-            else:
+            extension, ok = QInputDialog.getItem(self, "select file format",
+                                                 "list of formats", exts, 0, False)
+            if not ok:
                 goOn = False
-
         if goOn:
-            self.manual_scorer.dIO.saveOverlayMovie(dirname, prefix, extension)
+            self.manual_scorer.dio.saveOverlayMovie(dirname, prefix, extension)
 
     def getFileName(self,title,path,fileFilter,mode):
         if mode == 'load':
@@ -520,7 +523,48 @@ class TabAnalysis(QWidget):
                                 QMessageBox.Ok)
             return
 
-        _thread.start_new_thread(self.manual_scorer.go, ())
+        # Run scorer in a proper thread so we can detect when it finishes
+        import threading
+        self._scorer_thread = threading.Thread(
+            target=self.manual_scorer.go, daemon=True, name='pyvisor-scorer')
+        self._scorer_thread.start()
+
+        # Poll for scorer completion
+        from PyQt5.QtCore import QTimer
+        self._scorer_poll_timer = QTimer(self)
+        self._scorer_poll_timer.timeout.connect(self._check_scorer_finished)
+        self._scorer_poll_timer.start(500)
+
+    def _check_scorer_finished(self):
+        """Called periodically to check if the scorer thread has ended."""
+        if hasattr(self, '_scorer_thread') and self._scorer_thread is not None:
+            if not self._scorer_thread.is_alive():
+                self._scorer_poll_timer.stop()
+                self._scorer_thread = None
+                self._on_scorer_finished()
+
+    def _on_scorer_finished(self):
+        """Called when the scorer window is closed. Prompt to save."""
+        scorer = self.gui_data_interface.manual_scorer
+        if scorer is None:
+            return
+
+        data = scorer.get_data()
+        if data is False or data is None:
+            return
+
+        reply = QMessageBox.question(
+            self, "Scorer session ended",
+            "The scoring session has ended.\n\n"
+            "A resume file has been saved next to the video\n"
+            "(*.pyvisor.pkl). Your annotations will be restored\n"
+            "automatically the next time you run the scorer on\n"
+            "the same video.\n\n"
+            "Would you like to export the data now?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            self.exportData(None)
 
     def _is_animal_behaviour(self, key: str, animal_behaviours_as_strings: List[List[str]]) -> bool:
         return self.assignment[0][key].name in chain.from_iterable(animal_behaviours_as_strings)
