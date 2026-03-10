@@ -2,7 +2,7 @@ from typing import List
 
 from PyQt5.QtWidgets import (QWidget, QGridLayout,
                              QVBoxLayout, QHBoxLayout,
-                             QPushButton, QLineEdit)
+                             QPushButton, QLineEdit, QColorDialog)
 
 from .behaviour_widget import BehaviourWidget
 from ..model.animal import Animal
@@ -52,6 +52,11 @@ class SingleAnimalTab(QWidget):
         btn_copy_animal = QPushButton('copy animal')
         btn_copy_animal.clicked.connect(self.copy_this_tab)
         self.vbox_buttons_left.addWidget(btn_copy_animal)
+
+        # ---- button set animal colour
+        btn_set_color = QPushButton('set animal colour')
+        btn_set_color.clicked.connect(self._set_animal_colour)
+        self.vbox_buttons_left.addWidget(btn_set_color)
 
         # ---- btn remove
         btn_remove_animal = QPushButton('remove this animal')
@@ -155,6 +160,24 @@ class SingleAnimalTab(QWidget):
         self.name_edit = QLineEdit(self.name)
         self.name_edit.returnPressed.connect(self.rename_finished)
         self.vbox_buttons_left.insertWidget(0, self.name_edit)
+
+    def _set_animal_colour(self):
+        """Set a single colour for all behaviours of this animal."""
+        color = QColorDialog.getColor()
+        if not color.isValid():
+            return
+        color_name = str(color.name())
+        for behav in self.animal.behaviours.values():
+            if behav.name == 'delete':
+                continue
+            self.gui_data_interface.set_icon_color(behav, color_name)
+        # refresh the displayed widgets
+        for bw in self.behav_widgets:
+            if bw.behaviour.name == 'delete':
+                continue
+            bw.btn_color.setStyleSheet(
+                "QWidget { background-color: %s}" % color_name)
+            bw._set_icon_from_tmp_file()
 
     def rename_finished(self):
         self.btn_edit_name.setText(self.name_edit.text())
