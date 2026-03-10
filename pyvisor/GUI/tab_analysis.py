@@ -19,6 +19,7 @@ except ImportError:
     import _thread
 from itertools import chain
 HERE = os.path.dirname(os.path.abspath(__file__))
+HOME = os.path.expanduser("~")
 
 
 class TabAnalysis(QWidget):
