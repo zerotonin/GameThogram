@@ -1,5 +1,11 @@
-pyVISOR Documentation
-=====================
+GameThogram Documentation
+=========================
+
+.. image:: _static/gamethogram_128.png
+   :align: center
+   :alt: GameThogram logo
+
+Gamepad-driven ethogram annotation for animal behaviour research.
 
 .. toctree::
    :maxdepth: 2

@@ -2,9 +2,11 @@ from pathlib import Path
 import shutil
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QIcon
 
 from pyvisor.GUI.main_gui import MovScoreGUI
 from pyvisor.paths import ensure_tmp_icon_dir, ensure_user_data_dir
+from pyvisor.resources import resource_path
 
 
 def reset_directory(directory: Path) -> None:
@@ -22,6 +24,7 @@ def main():
     reset_directory(tmp_icon_dir)
 
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(str(resource_path('gamethogram_48.png'))))
 
     # ── Global dark theme ────────────────────────────────────────
     app.setStyleSheet("""
@@ -62,7 +65,24 @@ def main():
             border: 1px solid #666; border-radius: 2px;
             padding: 2px 4px;
         }
-        QCheckBox { background: transparent; }
+        QCheckBox { background: transparent; spacing: 6px; color: #d4d4d4; }
+        QCheckBox::indicator {
+            width: 18px; height: 18px;
+            border: 2px solid #888; border-radius: 3px;
+            background: #555;
+        }
+        QCheckBox::indicator:unchecked:hover {
+            border-color: #aaa;
+            background: #606060;
+        }
+        QCheckBox::indicator:checked {
+            background: #5a9bd5;
+            border-color: #4a8bc5;
+        }
+        QCheckBox::indicator:checked:hover {
+            background: #6aabee;
+            border-color: #5a9bd5;
+        }
         QSpinBox {
             background: #484b4d; color: #e0e0e0;
             border: 1px solid #666;

@@ -91,8 +91,8 @@ class MovScoreGUI(QWidget):
         """
         """        
         self._load_size_and_position_of_last_usage()
-        self.setWindowTitle('Pyvisor')
-        self.setWindowIcon(QIcon(str(resource_path('icons', 'game', 'MES_trans.png'))))
+        self.setWindowTitle('GameThogram')
+        self.setWindowIcon(QIcon(str(resource_path('gamethogram_48.png'))))
         vbox = QVBoxLayout()
         self.setLayout(vbox)
 

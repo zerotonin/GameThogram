@@ -78,10 +78,10 @@ class ManualEthologyScorer2:
         pygame.time.Clock()
 
         # setup icons
-        icon = self.image2surf(str(resource_path("MES.png")))
+        icon = self.image2surf(str(resource_path("gamethogram_64.png")))
         self._delete_icon = self.image2surf(str(resource_path("icons", "game", "del.png")))
         self.window.set_icon(icon)
-        self.window.set_caption("Manual Ethology Scorer - " + self.movie.fileName)
+        self.window.set_caption("GameThogram — " + self.movie.fileName)
 
         self._adjust_window_size()
 

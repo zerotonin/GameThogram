@@ -1,6 +1,6 @@
 """Sphinx configuration for pyVISOR documentation."""
 
-project = "pyVISOR"
+project = "GameThogram"
 author = "Bart Geurten, Ilyas Kuhlemann"
 release = "0.1.0"
 
@@ -21,6 +21,12 @@ exclude_patterns = ["_build"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+html_logo = "_static/gamethogram_128.png"
+html_favicon = "_static/gamethogram_128.png"
+html_theme_options = {
+    "logo_only": False,
+    "display_version": True,
+}
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
