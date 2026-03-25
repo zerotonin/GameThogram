@@ -29,8 +29,8 @@ GameThogram is a desktop application for manually scoring animal behaviours in v
 ### Install from source
 
 ```bash
-git clone https://github.com/zerotonin/gamethogram.git
-cd gamethogram
+git clone https://github.com/zerotonin/GameThogram.git
+cd GameThogram
 pip install -e .
 ```
 
@@ -64,9 +64,47 @@ gamethogram       # launch from anywhere after install
 4. **Score** — the scorer window opens with your video; press gamepad buttons to toggle behaviours; F1 shows/hides the key binding overlay; close the window when done
 5. **Export** — choose a format and click **Export Data**; or switch to the **Results Overview** tab for plots and CSV/PNG/SVG export
 
-### Gamepad setup
+## Gamepad setup
 
-- **Linux:** Most USB gamepads work out of the box. If not, install `xboxdrv` or `xpad`. Plug in before launching.
+GameThogram works with any gamepad that pygame/SDL can detect. Plug in your controller **before** launching so that pygame picks it up at startup.
+
+The **"Set default movie bindings"** button provides one-click presets for **Xbox and PlayStation layouts only**. All other controllers (8BitDo, generic USB pads, Nintendo-style controllers, etc.) work perfectly well — you simply assign each button manually using the "assign button" dialog, which detects any button press, stick movement, or trigger pull on any recognised controller.
+
+### Tested controllers (25 March 2026)
+
+| Controller | Connection | OS | Status |
+|---|---|---|---|
+| Xbox 360 | USB | Linux | ✅ Works out of the box |
+| Xbox One | USB | Linux | ✅ Works out of the box |
+| Xbox Elite Series 2 | USB | Linux | ✅ Works out of the box; paddles register as extra buttons |
+| Sony PS5 DualSense | USB | Linux | ✅ Works out of the box |
+| CSL PS2-style clone | USB | Linux | ✅ Works out of the box |
+| 8BitDo Pro 3 | Bluetooth (S mode) | Linux | ✅ Works after Bluetooth pairing |
+| 8BitDo Pro 3 | USB dongle | Linux | ❓ Not yet tested reliably |
+
+### 8BitDo Pro 3 via Bluetooth
+
+The 8BitDo Pro 3 works over Bluetooth after a standard pairing procedure:
+
+1. Set the switch on the back of the controller to **S**
+2. Pair via your system's Bluetooth settings or `bluetoothctl`:
+   ```bash
+   bluetoothctl
+   power on
+   scan on
+   # Hold the pairing button on the controller until the LED flashes
+   pair XX:XX:XX:XX:XX:XX
+   trust XX:XX:XX:XX:XX:XX
+   connect XX:XX:XX:XX:XX:XX
+   ```
+3. Launch GameThogram — the controller appears as "Pro Controller" in the device dropdown
+4. Assign buttons manually (no default preset for this layout)
+
+USB dongle support (S/X and D modes) has not been tested reliably and may depend on your kernel and SDL versions.
+
+### Platform-specific notes
+
+- **Linux:** Most USB gamepads work out of the box. If a controller is not detected, try installing `xboxdrv` or `xpad`. For Bluetooth controllers, ensure the device is paired before launching.
 - **macOS:** Xbox controllers may require [360Controller](https://github.com/360Controller/360Controller) or Bluetooth pairing.
 - **Windows:** Xbox controllers work natively. PlayStation controllers may need [DS4Windows](https://ds4-windows.com/).
 
@@ -74,11 +112,10 @@ gamethogram       # launch from anywhere after install
 
 GameThogram uses [pims](https://github.com/soft-matter/pims) + [PyAV](https://github.com/PyAV-Org/PyAV) for video I/O: AVI, MP4, MOV, MKV, MPG, WMV, FLV, WebM, M4V, and Norpix SEQ files. Image sequences (JPEG, PNG, TIFF) are also supported.
 
-
 ## Project structure
 
 ```
-gamethogram/
+GameThogram/
 ├── pyvisor/                    # Main package (internal name kept for compatibility)
 │   ├── GUI/                    # PyQt5 interface
 │   │   ├── model/              # Data model (Animal, Behaviour, KeyBindings, …)
@@ -90,7 +127,7 @@ gamethogram/
 │   │   ├── main_gui.py         # Main window
 │   │   └── run_gui.py          # Entry point
 │   ├── analysis/               # Offline and online analysis modules
-│   ├── resources/              # Bundled icons
+│   ├── resources/              # Bundled icons and logo
 │   ├── manual_ethology_scorer_2.py  # Scorer engine (pygame)
 │   ├── MediaHandler.py         # Video playback via pims
 │   ├── ethogram.py             # Ethogram data structure
