@@ -107,22 +107,42 @@ class GUIDataInterface:
     def get_action_assigned_to(
             self, button_identifier
     ) -> Union[Tuple[Behaviour, bool], Tuple[None, bool]]:
-        # Check behaviours first — return first match
-        for an in self.animals:
-            animal = self.animals[an]
-            assigned_an = animal.get_behaviour_assigned_to(
-                self.selected_device, button_identifier
-            )
-            if assigned_an is not None:
-                return assigned_an, True
+        """Find the first action bound to *button_identifier*.
 
-        # Check movie actions
-        assigned_movie_action = self.movie_bindings.get_action_assigned_to(
+        Returns ``(action, is_behaviour)`` or ``(None, False)``.
+        """
+        for an in self.animals.values():
+            hit = an.get_behaviour_assigned_to(
+                self.selected_device, button_identifier)
+            if hit is not None:
+                return hit, True
+
+        hit = self.movie_bindings.get_action_assigned_to(
             self.selected_device, button_identifier)
-        if assigned_movie_action is not None:
-            return assigned_movie_action, False
+        if hit is not None:
+            return hit, False
 
         return None, False
+
+    def steal_button(self, button_identifier: str):
+        """Clear *button_identifier* from every behaviour and movie action.
+
+        Called before assigning the button to a new action so that no
+        duplicates remain.
+        """
+        device = self.selected_device
+        # clear from all behaviours across all animals
+        for animal in self.animals.values():
+            for behav in animal.behaviours.values():
+                if behav.key_bindings[device] == button_identifier:
+                    behav.key_bindings[device] = None
+                    self._update_UIs_key_binding(behav, True)
+        # clear from all movie actions
+        for name in self.movie_bindings.keys():
+            action = self.movie_bindings[name]
+            if action.key_bindings[device] == button_identifier:
+                action.key_bindings[device] = None
+                self._update_UIs_key_binding(action, False)
 
     def change_button_binding(
             self,

@@ -130,10 +130,10 @@ class AssignButtonBox(QWidget):
         assigned_action, is_behaviour = self.gui_data_interface.get_action_assigned_to(
             button_identifier)
 
-        if assigned_action is not None:
-            self.gui_data_interface.change_button_binding(assigned_action,
-                                                          None,
-                                                          is_behaviour)
+        # Clear this button from ALL old assignments (behaviours + movie actions)
+        self.gui_data_interface.steal_button(button_identifier)
+
+        # Assign to the new action
         self.gui_data_interface.change_button_binding(self.action, button_identifier, self.is_behaviour)
 
     def button_assignment_changed(self, action: ScorerAction, is_behaviour: bool):
