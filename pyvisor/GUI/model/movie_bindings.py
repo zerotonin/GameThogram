@@ -49,19 +49,14 @@ class MovieBindings:
         }
         return d
 
+
     def get_action_assigned_to(self, device: str, button_identifier: str) -> ScorerAction:
-        assigned = None
         for key in self.keys():
             action = self[key]
             binding = action.key_bindings[device]
-            if binding != button_identifier:
-                continue
-            if binding is None:
-                continue
-            if assigned is not None:
-                raise RuntimeError("Key {} is assigned to multiple movie actions.".format(button_identifier))
-            assigned = action
-        return assigned
+            if binding is not None and binding == button_identifier:
+                return action
+        return None
 
     def get_actions_without_buttons_assigned(self, device: str) -> List[ScorerAction]:
         items = []
