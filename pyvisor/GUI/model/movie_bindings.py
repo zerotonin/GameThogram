@@ -49,7 +49,6 @@ class MovieBindings:
         }
         return d
 
-
     def get_action_assigned_to(self, device: str, button_identifier: str) -> ScorerAction:
         for key in self.keys():
             action = self[key]
