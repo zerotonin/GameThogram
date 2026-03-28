@@ -86,13 +86,18 @@ class TabResults(QWidget):
         btn_row.addStretch()
         outer.addLayout(btn_row)
 
-        # scrollable area for the three plot groups
+        # scrollable area for plot groups
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("background: transparent;")
         scroll_content = QWidget()
         self._plots_layout = QVBoxLayout(scroll_content)
         self._plots_layout.setSpacing(16)
+
+        # ethogram raster (dynamic height — created on refresh)
+        self._raster_grp = None
+        self._raster_fig = None
+        self._raster_canvas = None
 
         # percentage plot
         self._fig_pct, self._ax_pct, self._canvas_pct, grp_pct = \
@@ -222,10 +227,110 @@ class TabResults(QWidget):
         if self._result is None:
             return
         self._placeholder.setVisible(False)
+        self._draw_ethogram_raster()
         self._draw_percentages()
         self._draw_bout_durations()
         self._draw_transition_matrix()
         self._draw_per_animal_transitions()
+
+    def _draw_ethogram_raster(self):
+        """Draw a raster/timeline plot: one subplot per animal, coloured bars per behaviour."""
+        from collections import OrderedDict
+        from matplotlib.ticker import FuncFormatter
+
+        r = self._result
+        if r is None:
+            return
+
+        # ── Group behaviours by animal ──────────────────────────
+        animals = OrderedDict()  # animal_name -> list of BehaviourStats
+        for s in r.behaviour_stats:
+            animal, behav = _split_label(s.label)
+            animals.setdefault(animal, []).append(s)
+
+        n_animals = len(animals)
+        if n_animals == 0:
+            return
+
+        total_dur_s = r.n_frames / r.fps
+
+        # ── Remove old raster widget if present ─────────────────
+        if self._raster_grp is not None:
+            self._raster_grp.setVisible(False)
+            self._plots_layout.removeWidget(self._raster_grp)
+            self._raster_grp.deleteLater()
+            self._raster_grp = None
+
+        # ── Compute dynamic height ──────────────────────────────
+        max_behavs = max(len(stats) for stats in animals.values())
+        row_h = 22  # pixels per behaviour row
+        subplot_h = max(100, max_behavs * row_h + 60)
+        total_h = subplot_h * n_animals + 40
+
+        # ── Create plot group ───────────────────────────────────
+        fig, _, canvas, grp = self._make_plot_group(
+            "Ethogram Timeline", height=total_h)
+        fig.clear()
+        axes = fig.subplots(n_animals, 1, sharex=True, squeeze=False)
+        axes = [ax[0] for ax in axes]
+
+        colours = self._get_behaviour_colours(r.labels)
+        colour_map = {s.label: colours[i] for i, s in enumerate(r.behaviour_stats)}
+
+        for ax_idx, (animal_name, stats_list) in enumerate(animals.items()):
+            ax = axes[ax_idx]
+            n_behavs = len(stats_list)
+            behav_names = []
+
+            for row, s in enumerate(stats_list):
+                _, bname = _split_label(s.label)
+                behav_names.append(bname)
+                c = colour_map.get(s.label, '#888888')
+
+                if s.bout_intervals_s:
+                    ax.broken_barh(
+                        s.bout_intervals_s,
+                        (row - 0.4, 0.8),
+                        facecolors=c,
+                        edgecolors='none',
+                        linewidth=0,
+                    )
+
+            ax.set_yticks(range(n_behavs))
+            ax.set_yticklabels(behav_names, fontsize=8, color='white')
+            ax.set_ylim(-0.5, n_behavs - 0.5)
+            ax.invert_yaxis()
+            ax.set_xlim(0, total_dur_s)
+            ax.set_title(animal_name, fontsize=11, color='white', pad=4)
+            ax.tick_params(colors='white', labelsize=8)
+            ax.set_facecolor('#484b4d')
+            for spine in ax.spines.values():
+                spine.set_color('white')
+                spine.set_alpha(0.3)
+
+            # light grid on x axis
+            ax.grid(axis='x', color='white', alpha=0.15, linewidth=0.5)
+
+        # ── Format x-axis as HH:MM:SS on the bottom subplot ────
+        def _fmt_time(x, _):
+            h = int(x // 3600)
+            m = int((x % 3600) // 60)
+            s = int(x % 60)
+            return f"{h:02d}:{m:02d}:{s:02d}"
+
+        axes[-1].xaxis.set_major_formatter(FuncFormatter(_fmt_time))
+        axes[-1].set_xlabel("Time (HH:MM:SS)", fontsize=10, color='white')
+
+        fig.set_facecolor('#3c3f41')
+        fig.tight_layout()
+        canvas.draw()
+        grp.setVisible(True)
+
+        # Insert at position 0 (before percentages)
+        self._plots_layout.insertWidget(0, grp)
+        self._raster_grp = grp
+        self._raster_fig = fig
+        self._raster_canvas = canvas
 
     def _draw_percentages(self):
         r = self._result
@@ -409,7 +514,16 @@ class TabResults(QWidget):
                 f"Could not export:\n{exc}", QMessageBox.Ok)
 
     def _export_csv(self, plot_title: str, path: str):
-        if "Percentage" in plot_title:
+        if "Timeline" in plot_title or "Ethogram" in plot_title:
+            # Export raw binary ethogram as CSV
+            if self._result is not None and self._result.raw_data is not None:
+                import pandas as _pd
+                df = _pd.DataFrame(self._result.raw_data,
+                                   columns=self._result.labels)
+                df.insert(0, 'frame', range(len(df)))
+                df.insert(1, 'time_s', df['frame'] / self._result.fps)
+                df.to_csv(path, index=False)
+        elif "Percentage" in plot_title:
             df = stats_to_dataframe(self._result)
             df.to_csv(path, index=False)
         elif "Bout" in plot_title:
@@ -429,7 +543,11 @@ class TabResults(QWidget):
                     bbox_inches="tight")
 
     def _get_fig_for_title(self, title: str) -> Figure:
-        if "Percentage" in title:
+        if "Timeline" in title or "Ethogram" in title:
+            if self._raster_fig is not None:
+                return self._raster_fig
+            return self._fig_pct
+        elif "Percentage" in title:
             return self._fig_pct
         elif "Bout" in title:
             return self._fig_bout
@@ -461,3 +579,11 @@ def _short(label: str) -> str:
                 break
         return f"{animal}: {behav}"
     return label
+
+
+def _split_label(label: str):
+    """Split 'animal_0 : aggression' → ('animal_0', 'aggression')."""
+    if " : " in label:
+        parts = label.split(" : ", 1)
+        return parts[0].strip(), parts[1].strip()
+    return "unknown", label.strip()

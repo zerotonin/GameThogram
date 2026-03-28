@@ -22,6 +22,7 @@ class BehaviourStats:
     bout_mean_s: float
     bout_std_s: float
     frequency_hz: float  # bouts per second of total recording
+    bout_intervals_s: List[Tuple[float, float]] = field(default_factory=list)  # (start_s, duration_s)
 
 
 @dataclass
@@ -42,6 +43,7 @@ class AnalysisResult:
     transition_matrix: np.ndarray  # (n_behaviours, n_behaviours)
     transition_labels: List[str]  # row/column labels for the matrix
     per_animal_transitions: List[TransitionResult] = field(default_factory=list)
+    raw_data: Optional[np.ndarray] = None  # original binary matrix for raster plot
 
 
 def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> AnalysisResult:
@@ -81,6 +83,7 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
 
         # bout detection
         bout_durs = _bout_durations(col, fps)
+        bout_ivs = _bout_intervals(col, fps)
 
         bout_mean = float(np.nanmean(bout_durs)) if len(bout_durs) > 0 else 0.0
         bout_std = float(np.nanstd(bout_durs)) if len(bout_durs) > 0 else 0.0
@@ -95,6 +98,7 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
             bout_mean_s=bout_mean,
             bout_std_s=bout_std,
             frequency_hz=freq,
+            bout_intervals_s=bout_ivs,
         ))
 
     # transition matrix (global)
@@ -111,6 +115,7 @@ def analyse_ethogram(data: np.ndarray, labels: List[str], fps: float) -> Analysi
         transition_matrix=trans_mat,
         transition_labels=trans_labels,
         per_animal_transitions=per_animal,
+        raw_data=data,
     )
 
 
@@ -136,6 +141,32 @@ def _bout_durations(col: np.ndarray, fps: float) -> np.ndarray:
 
     durations_frames = stops - starts
     return durations_frames.astype(float) / fps
+
+
+def _bout_intervals(col: np.ndarray, fps: float) -> List[Tuple[float, float]]:
+    """Return list of (start_seconds, duration_seconds) for each bout.
+
+    Suitable for matplotlib's ``broken_barh``.
+    """
+    if col.sum() == 0:
+        return []
+
+    diff = np.diff(col.astype(int))
+    starts = np.where(diff == 1)[0] + 1
+    stops = np.where(diff == -1)[0] + 1
+
+    if col[0] == 1:
+        starts = np.insert(starts, 0, 0)
+    if col[-1] == 1:
+        stops = np.append(stops, len(col))
+
+    n = min(len(starts), len(stops))
+    intervals = []
+    for i in range(n):
+        t_start = starts[i] / fps
+        t_dur = (stops[i] - starts[i]) / fps
+        intervals.append((t_start, t_dur))
+    return intervals
 
 
 def _transition_matrix(data: np.ndarray, labels: List[str]) -> Tuple[np.ndarray, List[str]]:
