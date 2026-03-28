@@ -5,4 +5,4 @@ docs/_build
 .idea
 venv
 patch.diff
-.vscode/settings.json
+.vscode/*
