@@ -80,7 +80,7 @@ The **"Set default movie bindings"** button provides one-click presets for **Xbo
 | Sony PS5 DualSense | USB | Linux | ✅ Works out of the box |
 | CSL PS2-style clone | USB | Linux | ✅ Works out of the box |
 | 8BitDo Pro 3 | Bluetooth (S mode) | Linux | ✅ Works after Bluetooth pairing |
-| 8BitDo Pro 3 | USB dongle | Linux | ❓ Not yet tested reliably |
+| 8BitDo Pro 3 | USB cable | Linux | ❓ Not yet tested reliably |
 
 ### 8BitDo Pro 3 via Bluetooth
 
