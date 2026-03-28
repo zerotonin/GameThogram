@@ -107,33 +107,22 @@ class GUIDataInterface:
     def get_action_assigned_to(
             self, button_identifier
     ) -> Union[Tuple[Behaviour, bool], Tuple[None, bool]]:
-        assigned = None
-        is_behaviour = False
+        # Check behaviours first — return first match
         for an in self.animals:
             animal = self.animals[an]
             assigned_an = animal.get_behaviour_assigned_to(
                 self.selected_device, button_identifier
             )
-            if assigned_an is None:
-                continue
-            if assigned is not None:
-                raise RuntimeError(
-                    "Key {} is assigned to multiple behaviours.".format(
-                        button_identifier
-                    )
-                )
-            assigned = assigned_an
-            is_behaviour = True
+            if assigned_an is not None:
+                return assigned_an, True
+
+        # Check movie actions
         assigned_movie_action = self.movie_bindings.get_action_assigned_to(
             self.selected_device, button_identifier)
         if assigned_movie_action is not None:
-            if assigned is not None:
-                raise RuntimeError(
-                    "Key {} is assigned to multiple behaviours/movie actions.".format(
-                        button_identifier
-                    )
-                )
-        return assigned, is_behaviour
+            return assigned_movie_action, False
+
+        return None, False
 
     def change_button_binding(
             self,
