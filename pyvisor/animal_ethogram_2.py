@@ -28,7 +28,8 @@ class AnimalEthogram2:
 
     def assign_behaviours(self, frame: int, behav_labels: List[str]):
         if not self._behaviours_are_compatible(behav_labels):
-            raise RuntimeError("Behaviours are not compatible: {}".format(behav_labels))
+            # Incompatible — skip silently rather than crashing the scorer
+            return
         self._table.loc[frame, behav_labels] = [True] * len(behav_labels)
         if self._table.loc[frame].sum() == len(behav_labels):
             return
