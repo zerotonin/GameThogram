@@ -1,0 +1,108 @@
+name: Build and release
+
+on:
+  push:
+    tags:
+      - "v*"  # Trigger on version tags: git tag v0.1.0 && git push --tags
+
+permissions:
+  contents: write  # needed to create releases
+
+jobs:
+  build:
+    name: Build ${{ matrix.os_label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            os_label: Windows
+            artifact_name: GameThogram-Windows
+            exe_name: GameThogram.exe
+            package_cmd: |
+              cd dist
+              7z a -tzip ../GameThogram-Windows.zip GameThogram/
+          - os: macos-latest
+            os_label: macOS
+            artifact_name: GameThogram-macOS
+            exe_name: GameThogram
+            package_cmd: |
+              cd dist
+              zip -r ../GameThogram-macOS.zip GameThogram/
+          - os: ubuntu-22.04
+            os_label: Linux
+            artifact_name: GameThogram-Linux
+            exe_name: GameThogram
+            package_cmd: |
+              cd dist
+              tar czf ../GameThogram-Linux.tar.gz GameThogram/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Linux: install system dependencies for Qt, pygame, and FFmpeg
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+            libgl1-mesa-dev libegl1-mesa-dev \
+            ffmpeg libavformat-dev libavcodec-dev libavdevice-dev \
+            libavutil-dev libavfilter-dev libswscale-dev libswresample-dev \
+            pkg-config
+
+      # macOS: install FFmpeg for av/pims
+      - name: Install system deps (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg sdl2
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller
+          pip install numpy pandas scipy pillow matplotlib pims tqdm
+          pip install pygame av dill xlsxwriter appdirs PyQt5
+
+      - name: Build with PyInstaller
+        run: pyinstaller gamethogram.spec
+
+      - name: Package
+        run: ${{ matrix.package_cmd }}
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: GameThogram-*.*
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la GameThogram-*
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            GameThogram-Windows.zip
+            GameThogram-macOS.zip
+            GameThogram-Linux.tar.gz
+          generate_release_notes: true
+          draft: false
+          prerelease: false

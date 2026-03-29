@@ -1,22 +1,35 @@
 """Utilities for accessing packaged resource files."""
 from __future__ import annotations
 
-from importlib import resources
+import os
+import sys
 from pathlib import Path
 from typing import Iterable, Iterator, List
 
 
-def _traversable(*relative_parts: str):
-    traversable = resources.files(__name__)
-    for part in relative_parts:
-        traversable = traversable.joinpath(part)
-    return traversable
+def _is_frozen() -> bool:
+    """Return True if running inside a PyInstaller bundle."""
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 
 def resource_path(*relative_parts: str) -> Path:
-    """Return the filesystem path for a bundled resource."""
-    traversable = _traversable(*relative_parts)
-    return Path(traversable)
+    """Return the filesystem path for a bundled resource.
+
+    Works both in development (using importlib.resources) and when
+    frozen by PyInstaller (using sys._MEIPASS).
+    """
+    if _is_frozen():
+        base = Path(sys._MEIPASS) / "pyvisor" / "resources"
+        result = base
+        for part in relative_parts:
+            result = result / part
+        return result
+    else:
+        from importlib import resources
+        traversable = resources.files(__name__)
+        for part in relative_parts:
+            traversable = traversable.joinpath(part)
+        return Path(traversable)
 
 
 def iter_resource_dirs(*relative_parts: str) -> Iterator[Path]:
