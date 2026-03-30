@@ -68,7 +68,7 @@ jobs:
           pip install --upgrade pip
           pip install pyinstaller
           pip install numpy pandas scipy pillow matplotlib pims tqdm
-          pip install pygame av dill xlsxwriter appdirs PyQt5
+          pip install pygame av dill xlsxwriter appdirs PyQt5 imageio
 
       - name: Build with PyInstaller
         run: pyinstaller gamethogram.spec

@@ -25,11 +25,29 @@ for f in RESOURCES.rglob("*"):
         resource_datas.append((str(f), dest))
 
 # ── Analysis ───────────────────────────────────────────────
+from PyInstaller.utils.hooks import collect_data_files, copy_metadata
+
+# ── Collect package metadata that importlib.metadata needs ─
+extra_datas = []
+for pkg in ('imageio', 'pims', 'av', 'numpy', 'pandas', 'matplotlib',
+            'PIL', 'pillow', 'scipy', 'tqdm', 'xlsxwriter', 'dill',
+            'appdirs', 'pygame'):
+    try:
+        extra_datas += copy_metadata(pkg)
+    except Exception:
+        pass
+
+# Also collect imageio plugin data files
+try:
+    extra_datas += collect_data_files('imageio')
+except Exception:
+    pass
+
 a = Analysis(
     ["pyvisor/GUI/run_gui.py"],
     pathex=[str(HERE)],
     binaries=[],
-    datas=resource_datas,
+    datas=resource_datas + extra_datas,
     hiddenimports=[
         "pygame",
         "pygame.mixer",
@@ -43,6 +61,12 @@ a = Analysis(
         "PIL",
         "PIL.Image",
         "pims",
+        "pims.image_reader",
+        "pims.image_sequence",
+        "pims.api",
+        "imageio",
+        "imageio.core",
+        "imageio.plugins",
         "av",
         "appdirs",
         "xlsxwriter",
