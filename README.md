@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![DOI](https://zenodo.org/badge/725059593.svg)](https://doi.org/10.5281/zenodo.19324275)
+
 **Gamepad-driven ethogram annotation for animal behaviour research.**
 
 GameThogram is a desktop application for manually scoring animal behaviours in video recordings using a gamepad (Xbox, PlayStation) or keyboard. It is designed for ethologists and behavioural neuroscientists who need frame-accurate behavioural coding with real-time visual feedback.
