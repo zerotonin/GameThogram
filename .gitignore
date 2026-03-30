@@ -6,3 +6,4 @@ docs/_build
 venv
 patch.diff
 .vscode/*
+build/*
