@@ -85,8 +85,6 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[
         "tkinter",
-        "test",
-        "unittest",
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
