@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+            ffmpeg libavformat-dev libavcodec-dev libavdevice-dev \
+            libavutil-dev libavfilter-dev libswscale-dev libswresample-dev \
+            pkg-config
+
+      - name: Install Python deps
+        run: |
+          pip install --upgrade pip
+          pip install numpy pandas scipy pillow matplotlib pims tqdm
+          pip install pygame av dill xlsxwriter appdirs PyQt5 pytest
+          pip install -e .
+
+      - name: Run tests
+        run: python -m pytest tests/ -v
