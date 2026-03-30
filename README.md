@@ -1,10 +1,27 @@
 # GameThogram
+[![Tests](https://github.com/zerotonin/GameThogram/actions/workflows/tests.yml/badge.svg)](https://github.com/zerotonin/GameThogram/actions/workflows/tests.yml)
+[![Documentation](https://github.com/zerotonin/GameThogram/actions/workflows/docs.yml/badge.svg)](https://zerotonin.github.io/GameThogram)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![DOI](https://zenodo.org/badge/725059593.svg)](https://doi.org/10.5281/zenodo.19324275)
 
 **Gamepad-driven ethogram annotation for animal behaviour research.**
 
 GameThogram is a desktop application for manually scoring animal behaviours in video recordings using a gamepad (Xbox, PlayStation) or keyboard. It is designed for ethologists and behavioural neuroscientists who need frame-accurate behavioural coding with real-time visual feedback.
 
 > Formerly known as pyMovScorer / pyVISOR.
+
+## Download
+
+**No Python required.** Pre-built binaries for Windows, macOS, and Linux are available on the [Releases page](https://github.com/zerotonin/GameThogram/releases/latest). Download the archive for your platform, unzip, and double-click `GameThogram` to launch.
+
+| Platform | Download | Notes |
+|---|---|---|
+| Windows | `GameThogram-Windows.zip` | Unzip, run `GameThogram.exe` |
+| macOS | `GameThogram-macOS.zip` | Unzip, right-click → Open on first launch (Gatekeeper) |
+| Linux | `GameThogram-Linux.tar.gz` | Extract, run `./GameThogram` |
+
+If you prefer to install from source (e.g. for development), see [Installation](#installation) below.
 
 ## Features
 
