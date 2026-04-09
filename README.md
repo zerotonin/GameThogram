@@ -63,7 +63,7 @@ pip install -e .
 
 ```bash
 conda env create -f environment.yml
-conda activate gamethogram
+conda activate pyvisor
 pip install -e .
 ```
 
