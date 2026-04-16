@@ -193,6 +193,11 @@ class AssignButtonBox(QWidget):
         timer.timeout.connect(poll)
         timer.start(50)  # poll every 50 ms
 
+        if not pygame.get_init():
+            pygame.init()
+            pygame.joystick.init()
+            for i in range(pygame.joystick.get_count()):
+                pygame.joystick.Joystick(i).init()
         pygame.event.clear()
         dlg.exec_()
         timer.stop()
