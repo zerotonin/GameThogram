@@ -417,16 +417,16 @@ class TabButtons(QWidget):
         #    \________/                                \_________/
         #  PS2 CONTROLLER
         movie_keys = {
-            "B10": "toggleRunMov",
-            "B11": "stopToggle",
+            "B11": "toggleRunMov",
+            "B12": "stopToggle",
             "A0+": "runMovForward",
             "A0-": "runMovReverse",
-            "A1+": "changeFPShigh",
-            "A1-": "changeFPSlow",
+            "A1-": "changeFPShigh",
+            "A1+": "changeFPSlow",
             "A3+": "changeFrameNoHigh1",
             "A3-": "changeFrameNoLow1",
-            "A4+": "changeFrameNoHigh10",
-            "A4-": "changeFrameNoLow10"
+            "A4-": "changeFrameNoHigh10",
+            "A4+": "changeFrameNoLow10"
         }
         return movie_keys
 
@@ -450,9 +450,9 @@ class TabButtons(QWidget):
         keys = {
             "B9": "toggleRunMov", "B10": "stopToggle",
             "A0+": "runMovForward", "A0-": "runMovReverse",
-            "A1+": "changeFPShigh", "A1-": "changeFPSlow",
+            "A1-": "changeFPShigh", "A1+": "changeFPSlow",
             "A3+": "changeFrameNoHigh1", "A3-": "changeFrameNoLow1",
-            "A4+": "changeFrameNoHigh10", "A4-": "changeFrameNoLow10"
+            "A4-": "changeFrameNoHigh10", "A4+": "changeFrameNoLow10"
         }
         return keys
 
