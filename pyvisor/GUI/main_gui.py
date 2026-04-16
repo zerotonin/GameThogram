@@ -21,7 +21,7 @@ from .tab_behaviours.tab_behaviours import TabBehaviours
 from pyvisor.GUI.tab_buttons.tab_buttons import TabButtons
 from .tab_results import TabResults
 from pyvisor.resources import resource_path
-from pyvisor.paths import ensure_autosave_dir, ensure_user_data_dir, settings_path
+from pyvisor.paths import ensure_autosave_dir, ensure_extension, ensure_user_data_dir, settings_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -167,11 +167,12 @@ class MovScoreGUI(QWidget):
 
     def _export_settings_json(self):
         """Export animals, behaviours, key bindings, and device to a JSON file."""
-        path, _ = QFileDialog.getSaveFileName(
+        path, filt = QFileDialog.getSaveFileName(
             self, "Save pyVISOR settings", "",
             "JSON files (*.json)")
         if not path:
             return
+        path = ensure_extension(path, filt)
         state = self.gui_data_interface.get_savable_dict()
         try:
             with open(path, 'w') as fh:
