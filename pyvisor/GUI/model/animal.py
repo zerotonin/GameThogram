@@ -100,6 +100,8 @@ class Animal:
         new_animal = Animal(json_dict['animal_number'], json_dict['animal_name'])
         behaviours = [Behaviour.from_dict(d) for d in json_dict['behaviours']]
         for b in behaviours:
+            if b.animal_number != new_animal.number:
+                b.animal_number = new_animal.number
             new_animal[b.label] = b
         return new_animal
 
@@ -172,11 +174,11 @@ class Animal:
             if behav.name == 'delete':
                 continue
             new_behav = Behaviour(
-                animal_number=behav.animal_number,
+                animal_number=self.number,
                 icon_path=behav.icon_path,
                 color=behav.color,
                 name=behav.name,
-                compatible_with=behav.compatible_with
+                compatible_with=list(behav.compatible_with)
             )
             self[new_behav.label] = new_behav
 
