@@ -22,5 +22,8 @@ class CallbackHandler:
         if n in self.callback_functions:
             self.callback_functions.pop(n)
 
+    def clear(self):
+        self.callback_functions.clear()
+
     def __iter__(self):
         return self.callback_functions.values().__iter__()

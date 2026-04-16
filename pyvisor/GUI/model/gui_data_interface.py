@@ -41,6 +41,18 @@ class GUIDataInterface:
             "directory": str(ensure_autosave_dir())
         }
 
+    def clear_all_callbacks(self):
+        self.callbacks_animal_added.clear()
+        self.callbacks_animal_name_changed.clear()
+        self.callbacks_animal_removed.clear()
+        self.callbacks_behaviour_added.clear()
+        self.callbacks_behaviour_name_changed.clear()
+        self.callbacks_behaviour_color_changed.clear()
+        self.callbacks_behaviour_removed.clear()
+        self.callbacks_key_binding_changed.clear()
+        self.callbacks_update_icon.clear()
+        self.callbacks_compatibility_changed.clear()
+
     def add_animal(self, name: str, number: int) -> Animal:
         new_animal = Animal(number, name)
         self.animals[number] = new_animal

@@ -69,23 +69,7 @@ class MovScoreGUI(QWidget):
         except FileNotFoundError:
             with open(HERE + "/guidefaults_animals.json", 'r') as f:
                 state = json.load(f)
-
-        for a in state["animals"]:
-            ani = Animal.from_json_dict(a)
-            self.gui_data_interface.animals[ani.number] = ani
-        self.gui_data_interface.selected_device = state["selected_device"]
-        if "movie_bindings" in state:
-            self.gui_data_interface.movie_bindings = MovieBindings.from_dict(
-                state["movie_bindings"]
-            )
-        autosave_state = state.get("autosave", {})
-        if autosave_state.get("directory") in (None, ""):
-            autosave_state["directory"] = str(ensure_autosave_dir())
-        self.gui_data_interface.autosave_settings.update({
-            "enabled": autosave_state.get("enabled", self.gui_data_interface.autosave_settings["enabled"]),
-            "interval_seconds": autosave_state.get("interval_seconds", self.gui_data_interface.autosave_settings["interval_seconds"]),
-            "directory": autosave_state.get("directory", self.gui_data_interface.autosave_settings["directory"])
-        })
+        self._populate_from_state_dict(state)
 
     def initUI(self):
         """
@@ -110,8 +94,7 @@ class MovScoreGUI(QWidget):
 
         btn_load = QPushButton("Load settings…")
         btn_load.setStyleSheet("font-weight: bold; padding: 4px 12px;")
-        btn_load.setToolTip("Import a previously saved JSON settings file.\n"
-                         "Restart required after loading.")
+        btn_load.setToolTip("Import a previously saved JSON settings file.")
         btn_load.clicked.connect(self._import_settings_json)
         toolbar.addWidget(btn_load)
         toolbar.addStretch()
@@ -120,6 +103,9 @@ class MovScoreGUI(QWidget):
         # ---- tabs ----
         self.tabs = QTabWidget()
         vbox.addWidget(self.tabs)
+        self._create_tabs()
+
+    def _create_tabs(self):
         self.tab_behaviours = TabBehaviours(self, self.gui_data_interface)
         self.tab_buttons = TabButtons(self, self.gui_data_interface)
         self.tab_analysis = TabAnalysis(self, self.gui_data_interface)
@@ -200,9 +186,8 @@ class MovScoreGUI(QWidget):
     def _import_settings_json(self):
         """Import a previously saved JSON configuration.
 
-        This will **replace** the current animals, behaviours and key
-        bindings.  The GUI must be restarted for the changes to take
-        full effect.
+        Replaces the current animals, behaviours and key bindings
+        and rebuilds the UI tabs immediately — no restart needed.
         """
         path, _ = QFileDialog.getOpenFileName(
             self, "Load pyVISOR settings", "",
@@ -212,19 +197,50 @@ class MovScoreGUI(QWidget):
         try:
             with open(path, 'r') as fh:
                 state = json.load(fh)
-            # Persist into the user‐data directory so it is loaded on restart
-            settings_file = settings_path('guidefaults_animals.json')
-            settings_file.parent.mkdir(parents=True, exist_ok=True)
-            with settings_file.open('wt') as fh:
-                json.dump(state, fh, indent=2)
+            self._apply_state(state)
+            self.gui_data_interface.save_state()
             QMessageBox.information(
                 self, "Settings loaded",
-                "Configuration loaded from:\n{}\n\n"
-                "Please restart pyVISOR for the changes to take effect.".format(path),
+                "Configuration loaded from:\n{}".format(path),
                 QMessageBox.Ok)
         except Exception as exc:
             QMessageBox.critical(self, "Load failed", str(exc),
                                  QMessageBox.Ok)
+
+    def _apply_state(self, state):
+        """Replace in-memory state and rebuild all UI tabs."""
+        self.gui_data_interface.clear_all_callbacks()
+        self.gui_data_interface.animals.clear()
+        self.gui_data_interface.movie_bindings = MovieBindings()
+        self._populate_from_state_dict(state)
+
+        current_index = self.tabs.currentIndex()
+        while self.tabs.count() > 0:
+            widget = self.tabs.widget(0)
+            self.tabs.removeTab(0)
+            widget.deleteLater()
+        self._create_tabs()
+        if current_index < self.tabs.count():
+            self.tabs.setCurrentIndex(current_index)
+
+    def _populate_from_state_dict(self, state):
+        """Load animals, device, movie bindings, and autosave from a state dict."""
+        for a in state["animals"]:
+            ani = Animal.from_json_dict(a)
+            self.gui_data_interface.animals[ani.number] = ani
+        self.gui_data_interface.selected_device = state["selected_device"]
+        if "movie_bindings" in state:
+            self.gui_data_interface.movie_bindings = MovieBindings.from_dict(
+                state["movie_bindings"]
+            )
+        autosave_state = state.get("autosave", {})
+        if autosave_state.get("directory") in (None, ""):
+            autosave_state["directory"] = str(ensure_autosave_dir())
+        self.gui_data_interface.autosave_settings.update({
+            "enabled": autosave_state.get("enabled", self.gui_data_interface.autosave_settings["enabled"]),
+            "interval_seconds": autosave_state.get("interval_seconds", self.gui_data_interface.autosave_settings["interval_seconds"]),
+            "directory": autosave_state.get("directory", self.gui_data_interface.autosave_settings["directory"])
+        })
 
 
 if __name__ == "__main__":
