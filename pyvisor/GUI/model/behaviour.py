@@ -5,6 +5,7 @@ import numpy as np
 from pyvisor.GUI.model.key_bindings import KeyBindings
 from .scorer_action import ScorerAction
 from ...icon import Icon
+from ...resources import portable_icon_path, resolve_icon_path
 
 BehaviourName = str
 
@@ -78,7 +79,7 @@ class Behaviour(ScorerAction):
             'key_bindings': self.key_bindings.to_dict(),
             'animal': self.animal_number,
             'name': self.name,
-            'icon_path': self.icon_path,
+            'icon_path': portable_icon_path(self.icon_path),
             'color': self.color,
             'compatible_with': self.compatible_with
         }
@@ -89,7 +90,7 @@ class Behaviour(ScorerAction):
         behav = Behaviour(
             d['animal'],
             d['color'],
-            d['icon_path'],
+            resolve_icon_path(d['icon_path']),
             d['name'],
             d['compatible_with']
         )

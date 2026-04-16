@@ -50,3 +50,33 @@ def icon_categories() -> Iterable[Path]:
 def icons_root() -> Path:
     """Return the root directory for bundled icons."""
     return resource_path("icons")
+
+
+def portable_icon_path(icon_path: str | None) -> str | None:
+    """Convert an absolute bundled icon path to a relative one for portability."""
+    if icon_path is None:
+        return None
+    try:
+        return str(Path(icon_path).relative_to(icons_root()))
+    except ValueError:
+        return icon_path
+
+
+def resolve_icon_path(icon_path: str | None) -> str | None:
+    """Resolve a possibly-relative icon path back to an absolute one."""
+    if icon_path is None:
+        return None
+    p = Path(icon_path)
+    if not p.is_absolute():
+        return str(icons_root() / p)
+    if p.exists():
+        return icon_path
+    # Absolute path from another machine — look for an 'icons/' segment
+    # and resolve the trailing part against the local icons root.
+    parts = p.parts
+    for i, part in enumerate(parts):
+        if part == "icons" and i + 1 < len(parts):
+            candidate = icons_root() / Path(*parts[i + 1:])
+            if candidate.exists():
+                return str(candidate)
+    return icon_path
