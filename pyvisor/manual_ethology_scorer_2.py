@@ -62,6 +62,7 @@ class ManualEthologyScorer2:
         else:
             self.autosave_settings = {}
         self.overlay_settings = overlay_settings or {"dark_font": False, "font_size": 15}
+        self._axis_active = {}  # type: Dict[int, str]
 
         self._ethogram_lock = threading.RLock()
         self.dio = dataIO.dataIO(self)
@@ -78,6 +79,7 @@ class ManualEthologyScorer2:
             joy.init()
 
         pygame.time.Clock()
+        self._seed_axis_state()
 
         # setup icons
         icon = self.image2surf(str(resource_path("gamethogram_64.png")))
@@ -129,17 +131,35 @@ class ManualEthologyScorer2:
             return
         self.user_input_control.handle_input(input_code)
 
+    def _seed_axis_state(self):
+        """Record the initial axis positions so trigger rest values don't
+        fire a spurious input on the first event."""
+        self._axis_active.clear()
+        for i in range(pygame.joystick.get_count()):
+            joy = pygame.joystick.Joystick(i)
+            for axis in range(joy.get_numaxes()):
+                value = joy.get_axis(axis)
+                if value < -0.3:
+                    self._axis_active[axis] = '-'
+                elif value > 0.3:
+                    self._axis_active[axis] = '+'
+
     def _handle_event_joyaxismotion(self, event):
         value = event.dict['value']
         axis = event.dict['axis']
-        input_code = 'A' + str(axis)
+        if value < -0.3:
+            direction = '-'
+        elif value > 0.3:
+            direction = '+'
+        else:
+            self._axis_active.pop(axis, None)
+            return
+        if self._axis_active.get(axis) == direction:
+            return
+        self._axis_active[axis] = direction
+        input_code = 'A' + str(axis) + direction
         try:
-            if value < -0.3:
-                input_code = input_code + '-'
-                self.user_input_control.handle_input(input_code)
-            elif value > 0.3:
-                input_code += '+'
-                self.user_input_control.handle_input(input_code)
+            self.user_input_control.handle_input(input_code)
         except KeyError:
             pass
 
