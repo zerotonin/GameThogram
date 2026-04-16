@@ -35,7 +35,8 @@ class ManualEthologyScorer2:
 
     def __init__(self, animals: Dict[AnimalNumber, Animal],
                  movie_bindings: MovieBindings, selected_device: str,
-                 autosave_settings: Union[Dict[str, Union[bool, int, str]], None] = None):
+                 autosave_settings: Union[Dict[str, Union[bool, int, str]], None] = None,
+                 overlay_settings: Union[Dict[str, Union[bool, int]], None] = None):
         self.animals = animals
         self.movie_bindings = movie_bindings
         self.selected_device = selected_device
@@ -60,6 +61,7 @@ class ManualEthologyScorer2:
             self.autosave_settings = autosave_settings
         else:
             self.autosave_settings = {}
+        self.overlay_settings = overlay_settings or {"dark_font": False, "font_size": 15}
 
         self._ethogram_lock = threading.RLock()
         self.dio = dataIO.dataIO(self)
@@ -345,13 +347,21 @@ class ManualEthologyScorer2:
         pygame.draw.rect(self.screen, (255, 215, 0), rect, 3)
 
     def _update_text(self):
-        myfont = pygame.font.SysFont(pygame.font.get_default_font(), 15)
-        label = myfont.render("frame: " + str(self.movie.frameNo), 1, (255, 255, 0))
-        label2 = myfont.render("time: " + str(self.movie.get_time()) + ' s', 1, (255, 255, 0))
-        label3 = myfont.render("replay-fps: " + str(self.movie.fps), 1, (255, 255, 0))
-        self.screen.blit(label, (self.movie_window_offset + 10, self.movie.height - 45 + 144))
-        self.screen.blit(label2, (self.movie_window_offset + 10, self.movie.height - 30 + 144))
-        self.screen.blit(label3, (self.movie_window_offset + 10, self.movie.height - 15 + 144))
+        font_size = self.overlay_settings.get("font_size", 15)
+        if self.overlay_settings.get("dark_font", False):
+            color = (30, 30, 30)
+        else:
+            color = (255, 255, 0)
+        line_height = font_size + 2
+        myfont = pygame.font.SysFont(pygame.font.get_default_font(), font_size)
+        label = myfont.render("frame: " + str(self.movie.frameNo), 1, color)
+        label2 = myfont.render("time: " + str(self.movie.get_time()) + ' s', 1, color)
+        label3 = myfont.render("replay-fps: " + str(self.movie.fps), 1, color)
+        base_y = self.movie.height + 144 - 3 * line_height
+        x = self.movie_window_offset + 10
+        self.screen.blit(label, (x, base_y))
+        self.screen.blit(label2, (x, base_y + line_height))
+        self.screen.blit(label3, (x, base_y + 2 * line_height))
 
     def _draw_bindings_overlay(self):
         """Draw a semi-transparent overlay listing all current key bindings.

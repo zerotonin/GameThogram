@@ -40,6 +40,10 @@ class GUIDataInterface:
             "interval_seconds": 300,
             "directory": str(ensure_autosave_dir())
         }
+        self.overlay_settings = {
+            "dark_font": False,
+            "font_size": 15
+        }
 
     def clear_all_callbacks(self):
         self.callbacks_animal_added.clear()
@@ -76,7 +80,8 @@ class GUIDataInterface:
             "animals": self.get_savable_list(),
             "selected_device": self.selected_device,
             "movie_bindings": self.movie_bindings.to_dict(),
-            "autosave": self.autosave_settings
+            "autosave": self.autosave_settings,
+            "overlay": self.overlay_settings
         }
         return d
 

@@ -51,6 +51,7 @@ class TabAnalysis(QWidget):
         self.makeBehaviourSummary()
         self.makeMovieFileIO()
         self.makeAutosaveRow()
+        self.makeOverlayRow()
         self.makeCommandoRow()
         self.setLayout(self.vbox)
 
@@ -61,12 +62,14 @@ class TabAnalysis(QWidget):
         self.hboxMov = QHBoxLayout()
         self.hboxAutosave = QHBoxLayout()
         self.hboxConciseBehav = QHBoxLayout()
+        self.hboxOverlay = QHBoxLayout()
         self.hboxCommand = QHBoxLayout()
         self.hboxExport = QHBoxLayout()
         self.vbox.addStretch()
         self.vbox.addLayout(self.hboxConciseBehav)
         self.vbox.addLayout(self.hboxMov)
         self.vbox.addLayout(self.hboxAutosave)
+        self.vbox.addLayout(self.hboxOverlay)
         self.vbox.addLayout(self.hboxCommand)
         self.vbox.addLayout(self.hboxExport)
         self.vbox.addStretch()
@@ -231,6 +234,51 @@ class TabAnalysis(QWidget):
             return
         scorer.autosave_settings = self.gui_data_interface.autosave_settings
         scorer.dio.autosave()
+
+    def makeOverlayRow(self):
+        settings = self.gui_data_interface.overlay_settings
+
+        overlay_label = QLabel('Overlay text:')
+        overlay_label.setStyleSheet(self.labelStyle)
+        self.hboxOverlay.addWidget(overlay_label)
+
+        self.overlay_dark_font_checkbox = QCheckBox('Dark font')
+        self.overlay_dark_font_checkbox.setToolTip(
+            "Switch overlay text between light (for dark videos)\n"
+            "and dark (for bright videos).")
+        self.overlay_dark_font_checkbox.setChecked(settings['dark_font'])
+        self.overlay_dark_font_checkbox.setStyleSheet(self.labelStyle)
+        self.overlay_dark_font_checkbox.stateChanged.connect(self._on_overlay_dark_font_changed)
+        self.hboxOverlay.addWidget(self.overlay_dark_font_checkbox)
+
+        size_label = QLabel('size:')
+        size_label.setStyleSheet(self.labelStyle)
+        self.hboxOverlay.addWidget(size_label)
+
+        self.overlay_font_size_spin = QSpinBox()
+        self.overlay_font_size_spin.setRange(8, 48)
+        self.overlay_font_size_spin.setValue(settings['font_size'])
+        self.overlay_font_size_spin.setSuffix(' px')
+        self.overlay_font_size_spin.valueChanged.connect(self._on_overlay_font_size_changed)
+        self.hboxOverlay.addWidget(self.overlay_font_size_spin)
+
+        self.hboxOverlay.addStretch()
+
+    def _on_overlay_dark_font_changed(self, state):
+        self.gui_data_interface.overlay_settings['dark_font'] = state == Qt.Checked
+        self.gui_data_interface.save_state()
+        self._refresh_scorer_overlay_settings()
+
+    def _on_overlay_font_size_changed(self, value: int):
+        self.gui_data_interface.overlay_settings['font_size'] = value
+        self.gui_data_interface.save_state()
+        self._refresh_scorer_overlay_settings()
+
+    def _refresh_scorer_overlay_settings(self):
+        scorer = self.gui_data_interface.manual_scorer
+        if scorer is None:
+            return
+        scorer.overlay_settings = dict(self.gui_data_interface.overlay_settings)
 
     def makeCommandoRow(self):
         # ── Step 3: Run scorer ──
@@ -589,7 +637,8 @@ class TabAnalysis(QWidget):
         scorer = ManualEthologyScorer2(self.gui_data_interface.animals,
                                        self.gui_data_interface.movie_bindings,
                                        self.gui_data_interface.selected_device,
-                                       autosave_settings=dict(self.gui_data_interface.autosave_settings))
+                                       autosave_settings=dict(self.gui_data_interface.autosave_settings),
+                                       overlay_settings=dict(self.gui_data_interface.overlay_settings))
         self.gui_data_interface.manual_scorer = scorer
         self.manual_scorer = scorer
 

@@ -241,6 +241,11 @@ class MovScoreGUI(QWidget):
             "interval_seconds": autosave_state.get("interval_seconds", self.gui_data_interface.autosave_settings["interval_seconds"]),
             "directory": autosave_state.get("directory", self.gui_data_interface.autosave_settings["directory"])
         })
+        overlay_state = state.get("overlay", {})
+        self.gui_data_interface.overlay_settings.update({
+            "dark_font": overlay_state.get("dark_font", self.gui_data_interface.overlay_settings["dark_font"]),
+            "font_size": overlay_state.get("font_size", self.gui_data_interface.overlay_settings["font_size"])
+        })
 
 
 if __name__ == "__main__":
