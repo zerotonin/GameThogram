@@ -11,6 +11,7 @@ from .model.animal import Animal
 from .model.behaviour import Behaviour
 from .model.gui_data_interface import GUIDataInterface
 from ..manual_ethology_scorer_2 import ManualEthologyScorer2
+from ..paths import ensure_extension as _ensure_extension
 from itertools import chain
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
@@ -620,7 +621,8 @@ class TabAnalysis(QWidget):
         if mode == 'load':
             filename, _ = QFileDialog.getOpenFileName(self, title, path, fileFilter)
         elif mode == 'save':
-            filename, _ = QFileDialog.getSaveFileName(self, title, path, fileFilter)
+            filename, filt = QFileDialog.getSaveFileName(self, title, path, fileFilter)
+            filename = _ensure_extension(filename, filt)
         else:
             QMessageBox.warning(self, 'Unknown mode: ' + mode,
                                 "Data IO stopped, in getFileName",

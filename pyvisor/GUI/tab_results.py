@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import (
 )
 
 from .model.gui_data_interface import GUIDataInterface
+from ..paths import ensure_extension as _ensure_extension
 from ..analysis.ethogram_analysis import (
     analyse_ethogram,
     stats_to_dataframe,
@@ -495,10 +496,11 @@ class TabResults(QWidget):
         # choose file
         ext_map = {"CSV": "*.csv", "PNG": "*.png", "SVG": "*.svg"}
         filt = ext_map.get(fmt, "*.*")
-        path, _ = QFileDialog.getSaveFileName(
+        path, selected_filt = QFileDialog.getSaveFileName(
             self, f"Export {plot_title} as {fmt}", "", filt)
         if not path:
             return
+        path = _ensure_extension(path, selected_filt)
 
         try:
             if fmt == "CSV":

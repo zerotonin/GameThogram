@@ -46,8 +46,24 @@ def settings_path(filename: str) -> Path:
     return _user_data_dir() / filename
 
 
+def ensure_extension(path: str, selected_filter: str) -> str:
+    """Append the file extension from *selected_filter* if *path* has none.
+
+    *selected_filter* is the Qt filter string returned by QFileDialog,
+    e.g. ``"JSON files (*.json)"``.
+    """
+    if not path:
+        return path
+    import re, os
+    match = re.search(r'\*(\.\w+)', selected_filter)
+    if match and not os.path.splitext(path)[1]:
+        path += match.group(1)
+    return path
+
+
 __all__ = [
     "ensure_autosave_dir",
+    "ensure_extension",
     "ensure_tmp_icon_dir",
     "ensure_user_data_dir",
     "settings_path",
