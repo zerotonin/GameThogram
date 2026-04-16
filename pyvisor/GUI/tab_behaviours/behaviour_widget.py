@@ -155,16 +155,18 @@ class BehaviourWidget(QFrame):
         self.grid.addWidget(self.name_edit,
                             0, 0, 1, 2)
         self.name_edit.returnPressed.connect(self.rename_finished)
+        self.name_edit.editingFinished.connect(self.rename_finished)
+        self.name_edit.setFocus()
 
     def rename_finished(self):
+        if self.name_edit.isHidden():
+            return
         name = str(self.name_edit.text())
         try:
             self.gui_data_interface.change_behaviour_name(self.behaviour, name)
             self.btn_name.setText(self.name_edit.text())
         except NameIdenticalException:
-            QMessageBox.warning(self, 'Name unchanged!',
-                                "Specified name is identical.",
-                                QMessageBox.Ok)
+            pass
         except NameExistsException:
             QMessageBox.warning(self, "Name unchanged!",
                                 "Behaviour with that name already exists.",

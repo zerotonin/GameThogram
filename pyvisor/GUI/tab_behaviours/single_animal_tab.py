@@ -168,7 +168,9 @@ class SingleAnimalTab(QWidget):
         self.vbox_buttons_left.removeWidget(self.btn_edit_name)
         self.name_edit = QLineEdit(self.name)
         self.name_edit.returnPressed.connect(self.rename_finished)
+        self.name_edit.editingFinished.connect(self.rename_finished)
         self.vbox_buttons_left.insertWidget(0, self.name_edit)
+        self.name_edit.setFocus()
 
     def _set_animal_colour(self):
         """Set a single colour for all behaviours of this animal."""
@@ -189,6 +191,8 @@ class SingleAnimalTab(QWidget):
             bw._set_icon_from_tmp_file()
 
     def rename_finished(self):
+        if self.name_edit.isHidden():
+            return
         self.btn_edit_name.setText(self.name_edit.text())
         new_name = str(self.name_edit.text())
         self.gui_data_interface.change_animal_name(self.animal, new_name)
