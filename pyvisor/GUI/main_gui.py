@@ -209,16 +209,20 @@ class MovScoreGUI(QWidget):
 
     def _apply_state(self, state):
         """Replace in-memory state and rebuild all UI tabs."""
-        self.gui_data_interface.clear_all_callbacks()
-        self.gui_data_interface.animals.clear()
-        self.gui_data_interface.movie_bindings = MovieBindings()
-        self._populate_from_state_dict(state)
-
         current_index = self.tabs.currentIndex()
         while self.tabs.count() > 0:
             widget = self.tabs.widget(0)
             self.tabs.removeTab(0)
             widget.deleteLater()
+        # Process deferred deletions so old closeEvent handlers run
+        # BEFORE we clear callbacks and create new tabs.
+        QApplication.processEvents()
+
+        self.gui_data_interface.clear_all_callbacks()
+        self.gui_data_interface.animals.clear()
+        self.gui_data_interface.movie_bindings = MovieBindings()
+        self._populate_from_state_dict(state)
+
         self._create_tabs()
         if current_index < self.tabs.count():
             self.tabs.setCurrentIndex(current_index)
@@ -234,7 +238,8 @@ class MovScoreGUI(QWidget):
                 state["movie_bindings"]
             )
         autosave_state = state.get("autosave", {})
-        if autosave_state.get("directory") in (None, ""):
+        autosave_dir = autosave_state.get("directory")
+        if not autosave_dir or not os.access(autosave_dir, os.W_OK):
             autosave_state["directory"] = str(ensure_autosave_dir())
         self.gui_data_interface.autosave_settings.update({
             "enabled": autosave_state.get("enabled", self.gui_data_interface.autosave_settings["enabled"]),
